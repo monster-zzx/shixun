@@ -1,14 +1,52 @@
 package com.bar.beans;
+public class User implements java.io.Serializable {
+    private String username;
+    private String id;
+    private String password;
+    private String gender;
+    private String resume;
 
-public class User {
-    private int id;
+    public User() {
+    }
+    public User(String username, String password, String gender, String resume) {
+        this.username = username;
+        this.password = password;
+        this.gender = gender;
+        this.resume = resume;
+    }
 
-    public User(){}
-    public User(int id) {
-        this.id = id;
+    public String getId(){
+        return this.id;
     }
-    public int getId() {
-        return id;
+    public String getGender() {
+        return gender;
     }
-    public void setId(int id) {}
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    public String getResume() {
+        return resume;
+    }
+    public void setResume(String resume) {
+        this.resume = resume;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
 }
+
