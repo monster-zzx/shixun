@@ -23,4 +23,4 @@
 
 
 # 要求的技术
-- mybase
+- mybatis
