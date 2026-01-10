@@ -1,0 +1,6 @@
+<!-- 示例：src/main/resources/mapper/UserMapper.xml -->
+<mapper namespace="com.example.mapper.UserMapper">
+    <select id="selectUserById" resultType="User">
+        SELECT * FROM user WHERE id = #{id}
+    </select>
+</mapper>
