@@ -168,7 +168,9 @@
 
     <!-- JS -->
     <script src="JS/jquery-3.7.1.min.js"></script>
-    <script src="JS/bootstrap5.js"></script>
+<%--    <script src="JS/bootstrap5.js"></script>--%>
+    <script src="JS/bootstrap.bundle.js"></script>
+
     <script>
         // 顶栏按钮交互
         document.getElementById('btnNotify').addEventListener('click', () => alert('暂无新通知'));
