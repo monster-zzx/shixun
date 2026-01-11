@@ -6,6 +6,7 @@ public class LoginDTO {
     private String password;     // 密码
     private String loginType;    // 登录类型：username/email/phone
     private String captcha;      // 验证码
+    private String rememberMe;   // 记住我
 
 
     // Getters and Setters
@@ -21,5 +22,7 @@ public class LoginDTO {
     public String getCaptcha() { return captcha; }
     public void setCaptcha(String captcha) { this.captcha = captcha; }
 
+    public String getRememberMe() { return rememberMe; }
+    public void setRememberMe(String rememberMe) { this.rememberMe = rememberMe; }
 
 }

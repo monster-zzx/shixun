@@ -4,6 +4,7 @@ import com.bar.dto.LoginDTO;
 import com.bar.dto.UserQueryDTO;
 import com.bar.mapper.UserMapper;
 import com.bar.util.MybatisUtil;
+import com.bar.util.BCryptUtil;
 import org.apache.ibatis.session.SqlSession;
 
 import java.util.Date;

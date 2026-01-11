@@ -270,4 +270,12 @@
         </choose>
     </select>
 
+    <select id="selectUser" resultType="com.bar.beans.User"></select>
+
+    <select id="findByUsername" resultType="com.bar.beans.User"></select>
+
+    <select id="findByEmail" resultType="com.bar.beans.User"></select>
+
+    <select id="findByPhone" resultType="com.bar.beans.User"></select>
+
 </mapper>

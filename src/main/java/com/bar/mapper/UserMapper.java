@@ -46,5 +46,7 @@ public interface UserMapper {
 
     // 12. 删除用户（逻辑删除）
     int deleteUser(Integer id);
+
+    User selectUser(int i);
 }
 

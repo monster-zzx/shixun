@@ -3,7 +3,7 @@ import java.util.Date;
 
 public class User implements java.io.Serializable {
     private String username;
-    private String id;
+    private Integer id;
     private String password;
     private String gender;
     private String phone;
@@ -28,7 +28,7 @@ public class User implements java.io.Serializable {
         this.resume = resume;
     }
 
-    public String getId(){
+    public Integer getId(){
         return this.id;
     }
     public String getGender() {
