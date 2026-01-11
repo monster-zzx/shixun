@@ -3,7 +3,8 @@
 
 <mapper namespace="com.bar.mapper.UserMapper">
 
-    <select id="list" resultType="com.bar.beans.User">
-        select id from user;
+
+    <select id="selectUser" resultType="com.bar.beans.User">
+        SELECT * FROM user WHERE id = #{id}
     </select>
 </mapper>
