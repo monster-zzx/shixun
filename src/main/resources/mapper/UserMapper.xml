@@ -2,9 +2,272 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.bar.mapper.UserMapper">
+    <resultMap id="BaseResultMap" type="com.bar.beans.User">
+        <id property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="password" column="password"/>
+        <result property="email" column="email"/>
+        <result property="phone" column="phone"/>
+        <result property="role" column="role"/>
+        <result property="status" column="status"/>
+        <result property="loginCount" column="login_count"/>
+        <result property="lastLoginTime" column="last_login_time"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
 
-
-    <select id="selectUser" resultType="com.bar.beans.User">
-        SELECT * FROM user WHERE id = #{id}
+    <!-- 1. 动态SQL登录查询 -->
+    <select id="findByLoginInfo" parameterType="LoginDTO" resultMap="BaseResultMap">
+        SELECT * FROM users
+        WHERE status = 'active'
+        <choose>
+            <!-- 根据登录类型动态切换查询条件 -->
+            <when test="loginType == 'email'">
+                AND email = #{account}
+            </when>
+            <when test="loginType == 'phone'">
+                AND phone = #{account}
+            </when>
+            <otherwise>
+                AND username = #{account}
+            </otherwise>
+        </choose>
+        AND password = #{password}
+        LIMIT 1
     </select>
+
+
+    <!-- 3. 动态条件查询用户列表 -->
+    <select id="findUsersByCondition" parameterType="UserQueryDTO" resultMap="BaseResultMap">
+        SELECT * FROM users
+        WHERE 1=1
+        <!-- 关键字搜索（用户名、昵称、邮箱） -->
+        <if test="keyword != null and keyword != ''">
+            AND (
+            username LIKE CONCAT('%', #{keyword}, '%')
+            OR nickname LIKE CONCAT('%', #{keyword}, '%')
+            OR email LIKE CONCAT('%', #{keyword}, '%')
+            )
+        </if>
+
+        <!-- 状态筛选 -->
+        <if test="statusList != null and statusList.size() > 0">
+            AND status IN
+            <foreach collection="statusList" item="status" open="(" separator="," close=")">
+                #{status}
+            </foreach>
+        </if>
+
+        <!-- 角色筛选 -->
+        <if test="roleList != null and roleList.size() > 0">
+            AND role IN
+            <foreach collection="roleList" item="role" open="(" separator="," close=")">
+                #{role}
+            </foreach>
+        </if>
+
+        <!-- 时间范围筛选 -->
+        <if test="startDate != null">
+            AND create_time >= #{startDate}
+        </if>
+        <if test="endDate != null">
+            AND create_time &lt;= #{endDate}
+        </if>
+
+        <!-- 排序和分页 -->
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <!-- 4. 动态条件统计 -->
+    <select id="countUsersByCondition" parameterType="UserQueryDTO" resultType="Long">
+        SELECT COUNT(*) FROM users
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND (
+            username LIKE CONCAT('%', #{keyword}, '%')
+            OR nickname LIKE CONCAT('%', #{keyword}, '%')
+            OR email LIKE CONCAT('%', #{keyword}, '%')
+            )
+        </if>
+        <if test="statusList != null and statusList.size() > 0">
+            AND status IN
+            <foreach collection="statusList" item="status" open="(" separator="," close=")">
+                #{status}
+            </foreach>
+        </if>
+        <if test="roleList != null and roleList.size() > 0">
+            AND role IN
+            <foreach collection="roleList" item="role" open="(" separator="," close=")">
+                #{role}
+            </foreach>
+        </if>
+        <if test="startDate != null">
+            AND create_time >= #{startDate}
+        </if>
+        <if test="endDate != null">
+            AND create_time &lt;= #{endDate}
+        </if>
+    </select>
+
+    <!-- 5. 使用Map参数的动态查询 -->
+    <select id="findUsersByMap" parameterType="map" resultMap="BaseResultMap">
+        SELECT * FROM users
+        WHERE 1=1
+        <if test="username != null">
+            AND username = #{username}
+        </if>
+        <if test="email != null">
+            AND email = #{email}
+        </if>
+        <if test="role != null">
+            AND role = #{role}
+        </if>
+        <if test="minLoginCount != null">
+            AND login_count >= #{minLoginCount}
+        </if>
+        <if test="maxLoginCount != null">
+            AND login_count &lt;= #{maxLoginCount}
+        </if>
+        <!-- 使用bind进行模糊查询 -->
+        <if test="searchKey != null">
+            <bind name="pattern" value="'%' + searchKey + '%'"/>
+            AND (username LIKE #{pattern} OR nickname LIKE #{pattern})
+        </if>
+    </select>
+
+    <!-- 6. 更新登录信息 -->
+    <update id="updateLoginInfo">
+        UPDATE users
+        SET
+        login_count = COALESCE(#{loginCount}, login_count) + 1,
+        last_login_time = #{lastLoginTime},
+        update_time = NOW()
+        WHERE id = #{userId}
+    </update>
+
+    <!-- 7. 批量更新用户状态 -->
+    <update id="batchUpdateStatus">
+        UPDATE users
+        SET status = #{status},
+        update_time = NOW()
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <!-- 8. 插入用户（动态设置字段） -->
+    <insert id="insertUser" parameterType="com.bar.beans.User" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO users
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="username != null">username,</if>
+            <if test="password != null">password,</if>
+            <if test="email != null">email,</if>
+            <if test="nickname != null">nickname,</if>
+            <if test="phone != null">phone,</if>
+            <if test="avatar != null">avatar,</if>
+            <if test="role != null">role,</if>
+            <if test="status != null">status,</if>
+            create_time,
+            update_time
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
+            <if test="username != null">#{username},</if>
+            <if test="password != null">#{password},</if>
+            <if test="email != null">#{email},</if>
+            <if test="nickname != null">#{nickname},</if>
+            <if test="phone != null">#{phone},</if>
+            <if test="avatar != null">#{avatar},</if>
+            <if test="role != null">#{role},</if>
+            <if test="status != null">#{status},</if>
+            NOW(),
+            NOW()
+        </trim>
+    </insert>
+
+    <!-- 9. 动态更新用户信息 -->
+    <update id="updateUser" parameterType="com.bar.beans.User">
+        UPDATE users
+        <set>
+            <if test="username != null">username = #{username},</if>
+            <if test="password != null">password = #{password},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="nickname != null">nickname = #{nickname},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="avatar != null">avatar = #{avatar},</if>
+            <if test="role != null">role = #{role},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="loginCount != null">login_count = #{loginCount},</if>
+            <if test="lastLoginTime != null">last_login_time = #{lastLoginTime},</if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 10. 逻辑删除 -->
+    <update id="deleteUser" parameterType="Integer">
+        UPDATE users
+        SET status = 'deleted',
+        update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 11. 更复杂的动态SQL示例：多条件组合查询 -->
+    <select id="findByComplexCondition" parameterType="map" resultMap="BaseResultMap">
+        SELECT * FROM users
+        <where>
+            <!-- 使用choose-when-otherwise实现优先级条件 -->
+            <choose>
+                <when test="priorityCondition == 'admin'">
+                    role = 'admin' AND status = 'active'
+                </when>
+                <when test="priorityCondition == 'vip'">
+                    role = 'vip' AND login_count > 10
+                </when>
+                <otherwise>
+                    status != 'deleted'
+                </otherwise>
+            </choose>
+
+            <!-- 追加其他条件 -->
+            <if test="username != null">
+                AND username LIKE CONCAT('%', #{username}, '%')
+            </if>
+
+            <!-- 时间区间查询 -->
+            <if test="startTime != null and endTime != null">
+                AND create_time BETWEEN #{startTime} AND #{endTime}
+            </if>
+
+            <!-- 使用trim处理动态OR条件 -->
+            <if test="searchTypes != null and searchTypes.size() > 0">
+                AND
+                <trim prefix="(" suffix=")" prefixOverrides="OR">
+                    <if test="searchTypes.contains('name')">
+                        OR username LIKE CONCAT('%', #{keyword}, '%')
+                    </if>
+                    <if test="searchTypes.contains('nick')">
+                        OR nickname LIKE CONCAT('%', #{keyword}, '%')
+                    </if>
+                    <if test="searchTypes.contains('email')">
+                        OR email LIKE CONCAT('%', #{keyword}, '%')
+                    </if>
+                </trim>
+            </if>
+        </where>
+        ORDER BY
+        <choose>
+            <when test="orderBy == 'login'">
+                login_count DESC
+            </when>
+            <when test="orderBy == 'time'">
+                last_login_time DESC
+            </when>
+            <otherwise>
+                create_time DESC
+            </otherwise>
+        </choose>
+    </select>
+
 </mapper>
