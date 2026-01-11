@@ -18,7 +18,7 @@
 
     <!-- 1. 动态SQL登录查询 -->
     <select id="findByLoginInfo" parameterType="LoginDTO" resultMap="BaseResultMap">
-        SELECT * FROM users
+        SELECT * FROM user
         WHERE status = 'active'
         <choose>
             <!-- 根据登录类型动态切换查询条件 -->
@@ -39,7 +39,7 @@
 
     <!-- 3. 动态条件查询用户列表 -->
     <select id="findUsersByCondition" parameterType="UserQueryDTO" resultMap="BaseResultMap">
-        SELECT * FROM users
+        SELECT * FROM user
         WHERE 1=1
         <!-- 关键字搜索（用户名、昵称、邮箱） -->
         <if test="keyword != null and keyword != ''">
@@ -81,7 +81,7 @@
 
     <!-- 4. 动态条件统计 -->
     <select id="countUsersByCondition" parameterType="UserQueryDTO" resultType="Long">
-        SELECT COUNT(*) FROM users
+        SELECT COUNT(*) FROM user
         WHERE 1=1
         <if test="keyword != null and keyword != ''">
             AND (
@@ -112,7 +112,7 @@
 
     <!-- 5. 使用Map参数的动态查询 -->
     <select id="findUsersByMap" parameterType="map" resultMap="BaseResultMap">
-        SELECT * FROM users
+        SELECT * FROM user
         WHERE 1=1
         <if test="username != null">
             AND username = #{username}
@@ -138,7 +138,7 @@
 
     <!-- 6. 更新登录信息 -->
     <update id="updateLoginInfo">
-        UPDATE users
+        UPDATE user
         SET
         login_count = COALESCE(#{loginCount}, login_count) + 1,
         last_login_time = #{lastLoginTime},
@@ -148,7 +148,7 @@
 
     <!-- 7. 批量更新用户状态 -->
     <update id="batchUpdateStatus">
-        UPDATE users
+        UPDATE user
         SET status = #{status},
         update_time = NOW()
         WHERE id IN
@@ -159,7 +159,7 @@
 
     <!-- 8. 插入用户（动态设置字段） -->
     <insert id="insertUser" parameterType="com.bar.beans.User" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO users
+        INSERT INTO user
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="username != null">username,</if>
             <if test="password != null">password,</if>
@@ -188,7 +188,7 @@
 
     <!-- 9. 动态更新用户信息 -->
     <update id="updateUser" parameterType="com.bar.beans.User">
-        UPDATE users
+        UPDATE user
         <set>
             <if test="username != null">username = #{username},</if>
             <if test="password != null">password = #{password},</if>
@@ -207,7 +207,7 @@
 
     <!-- 10. 逻辑删除 -->
     <update id="deleteUser" parameterType="Integer">
-        UPDATE users
+        UPDATE user
         SET status = 'deleted',
         update_time = NOW()
         WHERE id = #{id}
@@ -215,7 +215,7 @@
 
     <!-- 11. 更复杂的动态SQL示例：多条件组合查询 -->
     <select id="findByComplexCondition" parameterType="map" resultMap="BaseResultMap">
-        SELECT * FROM users
+        SELECT * FROM user
         <where>
             <!-- 使用choose-when-otherwise实现优先级条件 -->
             <choose>

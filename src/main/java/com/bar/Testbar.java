@@ -13,7 +13,5 @@ public class Testbar {
     public static void main(String[] args) {
         SqlSession sqlSession = MybatisUtil.getSqlSession();
         UserMapper mapper = sqlSession.getMapper(UserMapper.class);
-        User user = mapper.selectUser(1);
-        System.out.println(user);
     }
 }
