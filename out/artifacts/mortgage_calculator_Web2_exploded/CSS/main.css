@@ -1,0 +1,122 @@
+/* 导航栏容器 */
+/*.navbar {*/
+/*    overflow: hidden;*/
+/*    background-color: #333;*/
+/*    font-family: Arial;*/
+/*}*/
+.navbar {
+    position: fixed; /* 添加固定定位 */
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000; /* 确保比侧边栏的z-index(1)更高 */
+    overflow: hidden;
+    background-color: #333;
+    font-family: Arial;
+}
+/* 导航栏内的链接 */
+.navbar a {
+    float: left;
+    font-size: 16px;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+}
+
+/* 下拉容器 */
+.dropdown {
+    float: left;
+    overflow: hidden;
+}
+
+/* 下拉按钮 */
+.dropdown .dropbtn {
+    font-size: 16px;
+    border: none;
+    outline: none;
+    color: white;
+    padding: 14px 16px;
+    background-color: inherit;
+    font-family: inherit; /* 对于手机上的垂直对齐很重要 */
+    margin: 0; /* 对于手机上的垂直对齐很重要 */
+}
+
+/* 在鼠标悬停时为导航栏链接添加红色背景色 */
+.navbar a:hover, .dropdown:hover .dropbtn {
+    background-color: red;
+}
+
+/* 下拉菜单内容（默认为隐藏） */
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+}
+
+/* 下拉菜单中的链接 */
+.dropdown-content a {
+    float: none;
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    text-align: left;
+}
+
+/* 鼠标悬停时给下拉菜单的链接添加灰色背景色 */
+.dropdown-content a:hover {
+    background-color: #ddd;
+}
+
+/* 鼠标悬停时显示下拉菜单 */
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+/* 侧边栏菜单 */
+.sidenav {
+    height: 100%; /* 全屏高度：如果您想要“自动”高度，请删除此设置 */
+    width: 160px; /* 设置侧边栏的宽度 */
+    position: fixed; /* 固定侧边栏（在滚动时保持在原位） */
+    z-index: 1; /* 始终保持在顶部 */
+    top: 50px; /* 始终保持在顶部 */
+    left: 0;
+    background-color: #111; /* 黑色 */
+    overflow-x: hidden; /* 禁用水平滚动 */
+    padding-top: 20px;
+}
+
+/* 导航菜单链接 */
+.sidenav a {
+    padding: 6px 8px 6px 16px;
+    text-decoration: none;
+    font-size: 25px;
+    color: #818181;
+    display: block;
+}
+
+/* 当您将鼠标悬停在导航链接上时，更改其颜色 */
+.sidenav a:hover {
+    color: #f1f1f1;
+}
+
+/* 设置页面内容样式 */
+/*.main {*/
+/*    margin-left: 160px; !* 与侧边栏的宽度相同 *!*/
+/*    padding: 0px 10px;*/
+/*}*/
+.main {
+    margin-top: 50px; /* 匹配导航栏高度 */
+    margin-left: 160px;
+    padding: 20px 10px;
+}
+
+/* 在高度小于 450 像素的较小屏幕上，更改侧边栏的样式（更少的内边距和更小的字体大小）*/
+@media screen and (max-height: 450px) {
+    .sidenav {padding-top: 15px;}
+    .sidenav a {font-size: 18px;}
+}
