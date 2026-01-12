@@ -13,7 +13,8 @@
 <nav class="navbar navbar-theme shadow-sm fixed-top">
     <div class="container-fluid">
         <!-- Logo / 品牌 -->
-        <a class="navbar-brand fw-bold" href="#"><img src="images/logo/img_1.png" class="rounded-circle" width="48" height="48" alt=""></a>
+        <a class="navbar-brand fw-bold" href="index.jsp"><img src="images/logo/img_1.png" class="rounded-circle" width="48" height="48" alt=""><span class="navbar-toggler">啊吧啊吧</span></a>
+
 
         <!-- 居中搜索栏 -->
         <form class="mx-auto w-50 position-relative">

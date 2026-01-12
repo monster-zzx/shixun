@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bar.mapper.BarMapper">
+
+    <!-- 插入贴吧 -->
+    <insert id="insertBar" parameterType="com.bar.beans.Bar" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO bar
+        (name, description, icon_url, owner_user_id, status, pubtime, updated_at)
+        VALUES
+        (#{name}, #{description}, #{iconUrl}, #{ownerUserId}, #{status}, #{pubtime}, #{updatedAt})
+    </insert>
+
+    <!-- 根据名称查询贴吧 -->
+    <select id="findByName" resultType="com.bar.beans.Bar">
+        SELECT * FROM bar WHERE name = #{name}
+    </select>
+
+    <!-- 统计某用户创建的贴吧数量 -->
+    <select id="countByOwnerId" resultType="int">
+        SELECT COUNT(1) FROM bar WHERE owner_user_id = #{ownerId}
+    </select>
+
+    <!-- 测试查询所有 -->
+    <select id="testBar" resultType="com.bar.beans.Bar">
+        SELECT * FROM bar
+    </select>
+
+    <!-- 根据ID删除 -->
+    <delete id="deleteBarById" parameterType="int">
+        DELETE FROM bar WHERE id = #{id}
+    </delete>
+
+    <!-- 根据ID查询 -->
+    <select id="selectById" resultType="com.bar.beans.Bar">
+        SELECT * FROM bar WHERE id = #{id}
+    </select>
+
+    <!-- 根据状态查询贴吧列表 -->
+    <select id="findByStatus" resultType="com.bar.beans.Bar">
+        SELECT * FROM bar WHERE status = #{status} ORDER BY pubtime DESC
+    </select>
+
+    <!-- 更新贴吧状态 -->
+    <update id="updateStatus">
+        UPDATE bar SET status = #{status}, updated_at = NOW() WHERE id = #{id}
+    </update>
+
+    <!-- 更新贴吧信息 -->
+    <update id="updateBar" parameterType="com.bar.beans.Bar">
+        UPDATE bar SET
+            name = #{name},
+            description = #{description},
+            icon_url = #{iconUrl},
+            status = #{status},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+</mapper>

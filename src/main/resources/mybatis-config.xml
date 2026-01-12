@@ -30,5 +30,6 @@
 
     <mappers>
         <mapper resource="mapper/UserMapper.xml"/>
+        <mapper resource="mapper/BarMapper.xml"/>
     </mappers>
 </configuration>
