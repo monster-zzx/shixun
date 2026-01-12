@@ -1,0 +1,12 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<footer>
+    <div class="container text-center" style="font-size = 10px ">
+            本网站所刊载的信息，不代表本网观点。使用本网站稿件，务必经书面授权。
+        <br/>
+        未经授权禁止转载、复制及建立镜像，违者将依法追究法律责任。
+    </div>
+</footer>
+<!-- JS -->
+<script src="JS/jquery-3.7.1.min.js"></script>
+<%--    <script src="JS/bootstrap5.js"></script>--%>
+<script src="JS/bootstrap.bundle.js"></script>
