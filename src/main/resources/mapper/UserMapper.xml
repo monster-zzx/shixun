@@ -158,31 +158,33 @@
     </update>
 
     <!-- 8. 插入用户（动态设置字段） -->
-    <insert id="insertUser" parameterType="com.bar.beans.User" useGeneratedKeys="true" keyProperty="id">
+    <insert id="insertUser" parameterType="User" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO user
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            <if test="username != null">username,</if>
-            <if test="password != null">password,</if>
+            username,
+            password,
             <if test="email != null">email,</if>
-            <if test="nickname != null">nickname,</if>
+            <if test="gender != null">gender,</if>
             <if test="phone != null">phone,</if>
-            <if test="avatar != null">avatar,</if>
-            <if test="role != null">role,</if>
-            <if test="status != null">status,</if>
+            <if test="resume != null">resume,</if>
+            role,
+            status,
+            login_count,
             create_time,
             update_time
         </trim>
         <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
-            <if test="username != null">#{username},</if>
-            <if test="password != null">#{password},</if>
+            #{username},
+            #{password},
             <if test="email != null">#{email},</if>
-            <if test="nickname != null">#{nickname},</if>
+            <if test="gender != null">#{gender},</if>
             <if test="phone != null">#{phone},</if>
-            <if test="avatar != null">#{avatar},</if>
-            <if test="role != null">#{role},</if>
-            <if test="status != null">#{status},</if>
-            NOW(),
-            NOW()
+            <if test="resume != null">#{resume},</if>
+            #{role},
+            #{status},
+            #{loginCount},
+            #{createTime},
+            #{updateTime}
         </trim>
     </insert>
 
@@ -272,10 +274,25 @@
 
     <select id="selectUser" resultType="com.bar.beans.User"></select>
 
-    <select id="findByUsername" resultType="com.bar.beans.User"></select>
+    <select id="findByUsername" parameterType="String" resultMap="BaseResultMap">
+        SELECT * FROM user
+        WHERE username = #{username}
+        AND status != 'deleted'  <!-- 排除已删除的用户 -->
+        LIMIT 1
+    </select>
 
-    <select id="findByEmail" resultType="com.bar.beans.User"></select>
+    <select id="findByEmail" parameterType="String" resultMap="BaseResultMap">
+        SELECT * FROM user
+        WHERE email = #{email}
+        AND status != 'deleted'  <!-- 排除已删除的用户 -->
+        LIMIT 1
+    </select>
 
-    <select id="findByPhone" resultType="com.bar.beans.User"></select>
+    <select id="findByPhone" parameterType="String" resultMap="BaseResultMap">
+        SELECT * FROM user
+        WHERE phone = #{phone}
+        AND status != 'deleted'  <!-- 排除已删除的用户 -->
+        LIMIT 1
+    </select>
 
 </mapper>

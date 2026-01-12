@@ -151,7 +151,7 @@
         </form>
 
         <div class="register-footer">
-            已有账号？<a href="login.jsp" class="text-decoration-none">立即登录</a>
+            已有账号？<a href="Login.jsp" class="text-decoration-none">立即登录</a>
         </div>
     </div>
 </div>
@@ -290,7 +290,7 @@
 
                         // 3秒后跳转到登录页面
                         setTimeout(function() {
-                            window.location.href = 'login.jsp';
+                            window.location.href = 'Login.jsp';
                         }, 3000);
                     } else {
                         // 注册失败

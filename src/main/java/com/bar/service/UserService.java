@@ -107,27 +107,44 @@ public class UserService {
      * 注册用户
      */
     public boolean register(User user) {
+        System.out.println("UserService.register() 开始");
+        System.out.println("用户信息: " + user);
+
         // 加密密码
-        user.setPassword(BCryptUtil.hashPassword(user.getPassword()));
+        String hashedPassword = BCryptUtil.hashPassword(user.getPassword());
+        System.out.println("密码加密完成，原密码长度: " + user.getPassword().length() +
+                ", 加密后长度: " + hashedPassword.length());
+
+        user.setPassword(hashedPassword);
         user.setStatus("active");
         user.setRole("user");
+        user.setLoginCount(0);
+        user.setCreateTime(new Date());
+        user.setUpdateTime(new Date());
 
         try (SqlSession sqlSession = MybatisUtil.getSqlSession()) {
             UserMapper mapper = sqlSession.getMapper(UserMapper.class);
 
-            // 检查用户名是否已存在
-            if (mapper.findByUsername(user.getUsername()) != null) {
-                return false;
-            }
-
-            // 检查邮箱是否已存在
-            if (user.getEmail() != null && mapper.findByEmail(user.getEmail()) != null) {
-                return false;
-            }
+            System.out.println("开始执行 insertUser");
 
             int result = mapper.insertUser(user);
-            sqlSession.commit();
-            return result > 0;
+
+            System.out.println("insertUser 执行结果: " + result);
+
+            if (result > 0) {
+                sqlSession.commit();
+                System.out.println("事务提交成功");
+                return true;
+            } else {
+                sqlSession.rollback();
+                System.out.println("插入失败，执行回滚");
+                return false;
+            }
+
+        } catch (Exception e) {
+            System.out.println("UserService.register() 出现异常: " + e.getMessage());
+            e.printStackTrace();
+            return false;
         }
     }
 
@@ -160,4 +177,6 @@ public class UserService {
             return mapper.findUsersByMap(searchParams);
         }
     }
+
+
 }
