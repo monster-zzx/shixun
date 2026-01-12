@@ -158,7 +158,7 @@
     </update>
 
     <!-- 8. 插入用户（动态设置字段） -->
-    <insert id="insertUser" parameterType="User" useGeneratedKeys="true" keyProperty="id">
+    <insert id="insertUser" parameterType="com.bar.beans.User" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO user
         <trim prefix="(" suffix=")" suffixOverrides=",">
             username,
