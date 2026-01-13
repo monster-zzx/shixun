@@ -238,6 +238,35 @@
                 refreshBtn.addEventListener('click', loadBars);
             }
         });
+        document.addEventListener('DOMContentLoaded', function() {
+            loadBars();
+
+            const refreshBtn = document.getElementById('btnRefreshBars');
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', loadBars);
+            }
+
+            // 创建贴吧按钮点击事件
+            const createBarBtn = document.querySelector('a[href="RegisterBar.jsp"]');
+            if (createBarBtn) {
+                createBarBtn.addEventListener('click', function(e) {
+                    // 检查是否登录
+                    if (!isLoggedIn()) {
+                        e.preventDefault();
+                        alert('请先登录后再创建贴吧！');
+                        window.location.href = 'Login.jsp';
+                    }
+                });
+            }
+        });
+
+        // 检查登录状态
+        function isLoggedIn() {
+            // 这里可以根据实际情况判断，比如检查cookie或session
+            // 简单示例：检查是否有用户信息在session中（需要在JSP中设置）
+            // 或者通过API验证
+            return ${not empty sessionScope.user};
+        }
 
         // 收藏磁贴分页逻辑（如果存在）
         (function () {

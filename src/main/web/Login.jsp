@@ -239,9 +239,25 @@
                     }
                 },
                 error: function(xhr, status, error) {
+                    console.error("=== AJAX 错误详情 ===");
+                    console.error("状态码:", xhr.status);
+                    console.error("状态文本:", xhr.statusText);
+                    console.error("错误信息:", error);
+                    console.error("响应文本:", xhr.responseText);
+                    console.error("请求URL:", xhr.responseURL);
+
                     let errorMsg = '登录请求失败';
-                    if (xhr.responseJSON && xhr.responseJSON.message) {
-                        errorMsg = xhr.responseJSON.message;
+                    if (xhr.responseText) {
+                        try {
+                            // 尝试解析JSON错误响应
+                            const errorResponse = JSON.parse(xhr.responseText);
+                            errorMsg = errorResponse.message || errorMsg;
+                        } catch (e) {
+                            // 如果不是JSON，直接显示响应文本
+                            if (xhr.responseText.length < 100) {
+                                errorMsg = xhr.responseText;
+                            }
+                        }
                     }
                     showError(errorMsg);
                     resetButton();

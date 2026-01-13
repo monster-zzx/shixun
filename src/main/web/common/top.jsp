@@ -13,8 +13,10 @@
 <nav class="navbar navbar-theme shadow-sm fixed-top">
     <div class="container-fluid">
         <!-- Logo / 品牌 -->
-        <a class="navbar-brand fw-bold" href="index.jsp"><img src="images/logo/img_1.png" class="rounded-circle" width="48" height="48" alt=""><span class="navbar-toggler">啊吧啊吧</span></a>
-
+        <a class="navbar-brand fw-bold" href="index.jsp">
+            <img src="images/logo/img_1.png" class="rounded-circle" width="48" height="48" alt="">
+            <span class="navbar-toggler">啊吧啊吧</span>
+        </a>
 
         <!-- 居中搜索栏 -->
         <form class="mx-auto w-50 position-relative">
@@ -24,25 +26,38 @@
 
         <!-- 右侧按钮 -->
         <div class="d-flex align-items-center">
-            <button class="btn position-relative me-3" id="btnNotify">
-                <i class="bi bi-bell fs-5"></i>
-                <span class="badge bg-danger position-absolute top-0 start-100 translate-middle p-1 rounded-circle small">3</span>
-            </button>
-            <button class="btn position-relative me-3" id="btnMsg">
-                <i class="bi bi-chat-dots fs-5"></i>
-                <span class="badge bg-danger position-absolute top-0 start-100 translate-middle p-1 rounded-circle small">5</span>
-            </button>
-            <div class="dropdown">
-                <a href="#" class="d-flex align-items-center text-decoration-none" data-bs-toggle="dropdown">
-                    <img src="images/faces/face2.jpg" alt="avatar" class="rounded-circle" width="32" height="32">
-                </a>
-                <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="#">个人中心</a></li>
-                    <li><a class="dropdown-item" href="#">设置</a></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="#">退出登录</a></li>
-                </ul>
-            </div>
+            <c:choose>
+                <%-- 如果用户已登录（session中有用户信息） --%>
+                <c:when test="${not empty sessionScope.user}">
+                    <button class="btn position-relative me-3" id="btnNotify">
+                        <i class="bi bi-bell fs-5"></i>
+                        <span class="badge bg-danger position-absolute top-0 start-100 translate-middle p-1 rounded-circle small">3</span>
+                    </button>
+                    <button class="btn position-relative me-3" id="btnMsg">
+                        <i class="bi bi-chat-dots fs-5"></i>
+                        <span class="badge bg-danger position-absolute top-0 start-100 translate-middle p-1 rounded-circle small">5</span>
+                    </button>
+                    <div class="dropdown">
+                        <a href="#" class="d-flex align-items-center text-decoration-none" data-bs-toggle="dropdown">
+                            <img src="images/faces/face2.jpg" alt="avatar" class="rounded-circle" width="32" height="32">
+                            <span class="ms-2 d-none d-md-inline">${sessionScope.user.username}</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="User.jsp">个人中心</a></li>
+                            <li><a class="dropdown-item" href="settings.jsp">设置</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="logout.jsp">退出登录</a></li>
+                        </ul>
+                    </div>
+                </c:when>
+                <%-- 如果用户未登录 --%>
+                <c:otherwise>
+                    <div class="d-flex">
+                        <a href="Login.jsp" class="btn btn-outline-primary me-2">登录</a>
+                        <a href="Register.jsp" class="btn btn-primary">注册</a>
+                    </div>
+                </c:otherwise>
+            </c:choose>
         </div>
     </div>
 </nav>

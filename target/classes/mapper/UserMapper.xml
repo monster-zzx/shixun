@@ -36,7 +36,6 @@
         LIMIT 1
     </select>
 
-
     <!-- 3. 动态条件查询用户列表 -->
     <select id="findUsersByCondition" parameterType="UserQueryDTO" resultMap="BaseResultMap">
         SELECT * FROM user
@@ -293,12 +292,5 @@
         WHERE phone = #{phone}
         AND status != 'deleted'  <!-- 排除已删除的用户 -->
         LIMIT 1
-<!-- 示例：src/main/resources/mapper/UserMapper.xml -->
-<!DOCTYPE mapper
-        PUBLIC "- //mybatis.org//DTD Mapper 3.0 //EN"
-        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.tjetc.mapper.UserMapper">
-    <select id="selectUserById" resultType="com.tjetc.entity.User">
-        SELECT * FROM user WHERE id = #{id}
     </select>
 </mapper>
