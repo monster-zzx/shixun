@@ -109,7 +109,9 @@
             AND create_time &lt;= #{endDate}
         </if>
     </select>
+    <select id="testest" >
 
+    </select>
     <!-- 5. 使用Map参数的动态查询 -->
     <select id="findUsersByMap" parameterType="map" resultMap="BaseResultMap">
         SELECT * FROM user
