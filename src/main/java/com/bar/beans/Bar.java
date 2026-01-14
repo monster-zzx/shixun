@@ -1,6 +1,7 @@
 package com.bar.beans;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 public class Bar {
     private Integer id;
@@ -11,6 +12,7 @@ public class Bar {
     private String status;
     private Timestamp pubtime; // Can be renamed to createdAt
     private Timestamp updatedAt;
+    private List<Tag> tags;
 
     public Bar() {}
 
@@ -78,5 +80,12 @@ public class Bar {
 
     public void setUpdatedAt(Timestamp updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public List<Tag> getTags() {
+        return tags;
+    }
+    public void setTags(List<Tag> tags) {
+        this.tags = tags;
     }
 }
