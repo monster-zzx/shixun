@@ -170,7 +170,7 @@
         .refreshing {
             animation: spin 1s linear infinite;
         }
-        
+
         /* 帖子区域样式 */
         #postListContainer {
             min-height: 300px;
@@ -227,132 +227,252 @@
                 font-size: 0.8rem;
                 -webkit-line-clamp: 3;
             }
+
+        /* 封禁提示样式 */
+        .banned-alert {
+            position: fixed;
+            top: 56px;
+            left: 0;
+            right: 0;
+            z-index: 1030;
+            border-radius: 0;
+            margin: 0;
+            animation: slideDown 0.5s ease-out;
+        }
+        @keyframes slideDown {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
         }
     </style>
 </head>
 <body>
-    <!-- 顶部导航 -->
-    <jsp:include page="common/top.jsp"/>
-    <!-- 主体区域 -->
-    <div class="d-flex justify-content-start" style="padding-top: 56px;">
-        <!-- 左侧用户信息栏 -->
-        <jsp:include page="common/left.jsp"/>
-        <!-- 右侧主内容 -->
-        <div class="p-2 w-75">
-            <section class="p-4">
-                <div class="container-fluid">
-                    <!-- 贴吧列表区域 -->
-                    <div class="card shadow-sm mb-4">
-                        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0">
-                                <i class="bi bi-collection"></i> 站内贴吧
-                            </h5>
-                            <div>
-                                <button id="btnRefreshBars" class="btn btn-light btn-sm">
-                                    <i class="bi bi-arrow-clockwise"></i> 刷新
+<!-- 顶部导航 -->
+<jsp:include page="common/top.jsp"/>
+
+<!-- 封禁提示（只有被封禁的用户才显示） -->
+<c:if test="${not empty sessionScope.user and sessionScope.userStatus == 'BANNED'}">
+    <div class="alert alert-danger banned-alert d-flex justify-content-between align-items-center" role="alert">
+        <div>
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            您的账号已被封禁，仅能浏览内容，无法进行发帖、评论、收藏等操作。
+            如有疑问，请联系管理员。
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+</c:if>
+
+<!-- 禁言提示 -->
+<c:if test="${not empty sessionScope.user and sessionScope.userStatus == 'MUTED'}">
+    <div class="alert alert-warning banned-alert d-flex justify-content-between align-items-center" role="alert">
+        <div>
+            <i class="bi bi-megaphone-fill me-2"></i>
+            您的账号已被禁言，仅能浏览内容，无法进行发帖、评论等操作。
+            禁言到期时间：${sessionScope.muteEndTime}
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+</c:if>
+
+<!-- 主体区域 -->
+<div class="d-flex justify-content-start" style="padding-top: 56px;">
+    <!-- 左侧用户信息栏 -->
+    <jsp:include page="common/left.jsp"/>
+    <!-- 右侧主内容 -->
+    <div class="p-2 w-75">
+        <section class="p-4">
+            <div class="container-fluid">
+                <!-- 贴吧列表区域 -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-collection"></i> 站内贴吧
+                        </h5>
+                        <div>
+                            <button id="btnRefreshBars" class="btn btn-light btn-sm">
+                                <i class="bi bi-arrow-clockwise"></i> 刷新
+                            </button>
+                            <!-- 封禁用户不能创建贴吧 -->
+                            <c:if test="${empty sessionScope.user or sessionScope.userStatus == 'BANNED' or sessionScope.userStatus == 'MUTED'}">
+                                <button class="btn btn-light btn-sm ms-2" disabled>
+                                    <i class="bi bi-plus-circle"></i> 创建贴吧
                                 </button>
+                            </c:if>
+                            <c:if test="${not empty sessionScope.user and sessionScope.userStatus != 'BANNED' and sessionScope.userStatus != 'MUTED'}">
                                 <a href="registerBar.jsp" class="btn btn-light btn-sm ms-2">
                                     <i class="bi bi-plus-circle"></i> 创建贴吧
                                 </a>
-                            </div>
-                        </div>
-                        <div class="card-body p-0">
-                            <div id="barListContainer">
-                                <div id="barLoading" class="text-center py-5">
-                                    <div class="spinner-border text-primary" role="status">
-                                        <span class="visually-hidden">加载中...</span>
-                                    </div>
-                                    <p class="mt-2 text-muted">正在加载贴吧列表...</p>
-                                </div>
-                                <div id="barListContent" class="masonry-container p-3" style="display: none;">
-                            <!-- 动态填充贴吧卡片 -->
-                        </div>
-                                <div id="barEmpty" class="text-center py-5 text-muted" style="display: none;">
-                                    <i class="bi bi-inbox" style="font-size: 3rem;"></i>
-                                    <p class="mt-2">暂无已通过的贴吧</p>
-                                </div>
-                            </div>
+                            </c:if>
                         </div>
                     </div>
-
-                    <!-- 最新帖子区域（预留） -->
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-success text-white">
-                            <h5 class="mb-0">
-                                <i class="bi bi-chat-dots"></i> 最新帖子
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <div id="postListContainer">
-                                <div class="text-center py-5 text-muted">
-                                    <i class="bi bi-file-text" style="font-size: 3rem;"></i>
-                                    <p class="mt-2">帖子功能开发中，敬请期待...</p>
+                    <div class="card-body p-0">
+                        <div id="barListContainer">
+                            <div id="barLoading" class="text-center py-5">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">加载中...</span>
                                 </div>
+                                <p class="mt-2 text-muted">正在加载贴吧列表...</p>
+                            </div>
+                            <div id="barListContent" class="row g-3 p-3" style="display: none;">
+                                <!-- 动态填充贴吧卡片 -->
+                            </div>
+                            <div id="barEmpty" class="text-center py-5 text-muted" style="display: none;">
+                                <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                                <p class="mt-2">暂无已通过的贴吧</p>
                             </div>
                         </div>
                     </div>
                 </div>
-            </section>
-        </div>
+
+                <!-- 最新帖子区域（预留） -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-chat-dots"></i> 最新帖子
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="postListContainer">
+                            <div class="text-center py-5 text-muted">
+                                <i class="bi bi-file-text" style="font-size: 3rem;"></i>
+                                <p class="mt-2">帖子功能开发中，敬请期待...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
     </div>
+</div>
 
-    <%@ include file="common/bottom.txt" %>
+<%@ include file="common/bottom.txt" %>
 
-    <script>
-        // 顶栏按钮交互（如果存在）
-        const btnNotify = document.getElementById('btnNotify');
-        if (btnNotify) btnNotify.addEventListener('click', function() { alert('暂无新通知'); });
-        const btnMsg = document.getElementById('btnMsg');
-        if (btnMsg) btnMsg.addEventListener('click', function() { alert('暂无新私信'); });
+<script>
+    // 检查用户是否被封禁
+    function isUserBanned() {
+        return ${not empty sessionScope.user and sessionScope.userStatus == 'BANNED'};
+    }
 
-        // 格式化日期
-        function formatDate(timestamp) {
-            if (!timestamp) return '-';
-            const date = new Date(timestamp);
-            return date.toLocaleDateString('zh-CN');
-        }
+    function isUserMuted() {
+        return ${not empty sessionScope.user and sessionScope.userStatus == 'MUTED'};
+    }
 
-        // 获取状态徽章
-        function getStatusBadge(status) {
-            const badges = {
-                'PENDING': '<span class="badge bg-warning">待审核</span>',
-                'ACTIVE': '<span class="badge bg-success">已通过</span>',
-                'REJECTED': '<span class="badge bg-danger">已拒绝</span>'
-            };
-            return badges[status] || '';
-        }
-
-        // 加载贴吧列表
-        async function loadBars() {
-            const loading = document.getElementById('barLoading');
-            const content = document.getElementById('barListContent');
-            const empty = document.getElementById('barEmpty');
-            const refreshBtn = document.getElementById('btnRefreshBars');
-
-            loading.style.display = 'block';
-            content.style.display = 'none';
-            empty.style.display = 'none';
-            
-            // 添加刷新按钮动画
-            if (refreshBtn) {
-                refreshBtn.querySelector('i').classList.add('refreshing');
+    // 被封禁用户的限制操作
+    function restrictBannedUser() {
+        if (isUserBanned() || isUserMuted()) {
+            // 禁用创建贴吧按钮（已在前端HTML中处理）
+            const createBarBtn = document.querySelector('a[href="registerBar.jsp"]');
+            if (createBarBtn) {
+                createBarBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    alert('您的账号已被限制，无法创建贴吧！');
+                });
             }
 
-            try {
-                const resp = await fetch('api/bar/manage', {
-                    method: 'GET',
-                    headers: { 'Content-Type': 'application/json;charset=UTF-8' }
-                });
+            // 禁用刷新按钮的特定功能（如果需要）
+            // 封禁用户只能浏览，不能刷新？这里保持浏览功能
+        }
+    }
 
-                const text = await resp.text();
-                let data;
-                try {
-                    data = JSON.parse(text);
-                } catch (e) {
-                    console.error('JSON解析失败:', text);
-                    loading.innerHTML = '<p class="text-danger">加载失败，请刷新重试</p>';
+    // 页面加载时自动加载贴吧列表
+    document.addEventListener('DOMContentLoaded', function() {
+        loadBars();
+
+        // 检查并限制被封禁用户
+        restrictBannedUser();
+
+        const refreshBtn = document.getElementById('btnRefreshBars');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', loadBars);
+        }
+
+        // 创建贴吧按钮点击事件
+        const createBarBtn = document.querySelector('a[href="RegisterBar.jsp"]');
+        if (createBarBtn) {
+            createBarBtn.addEventListener('click', function(e) {
+                // 检查是否登录
+                if (!isLoggedIn()) {
+                    e.preventDefault();
+                    alert('请先登录后再创建贴吧！');
+                    window.location.href = 'Login.jsp';
                     return;
                 }
+                // 检查是否被封禁
+                if (isUserBanned() || isUserMuted()) {
+                    e.preventDefault();
+                    alert('您的账号已被限制，无法创建贴吧！');
+                }
+            });
+        }
+    });
+
+    // 检查登录状态
+    function isLoggedIn() {
+        return ${not empty sessionScope.user};
+    }
+
+    // 原有的贴吧加载函数保持不变...
+    // 格式化日期
+    function formatDate(timestamp) {
+        if (!timestamp) return '-';
+        const date = new Date(timestamp);
+        return date.toLocaleDateString('zh-CN');
+    }
+
+    // 获取状态徽章
+    function getStatusBadge(status) {
+        const badges = {
+            'PENDING': '<span class="badge bg-warning">待审核</span>',
+            'ACTIVE': '<span class="badge bg-success">已通过</span>',
+            'REJECTED': '<span class="badge bg-danger">已拒绝</span>'
+        };
+        return badges[status] || '';
+    }
+
+    // 加载贴吧列表
+    async function loadBars() {
+        const loading = document.getElementById('barLoading');
+        const content = document.getElementById('barListContent');
+        const empty = document.getElementById('barEmpty');
+
+        loading.style.display = 'block';
+        content.style.display = 'none';
+        empty.style.display = 'none';
+
+        try {
+            const resp = await fetch('api/bar/manage', {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json;charset=UTF-8' }
+            });
+
+            const text = await resp.text();
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (e) {
+                console.error('JSON解析失败:', text);
+                loading.innerHTML = '<p class="text-danger">加载失败，请刷新重试</p>';
+                return;
+            }
+
+            loading.style.display = 'none';
+
+            if (data && data.success && data.data) {
+                // 只显示状态为 ACTIVE 的贴吧
+                const activeBars = data.data.filter(function(bar) {
+                    return bar.status === 'ACTIVE';
+                });
+
+                if (activeBars.length === 0) {
+                    empty.style.display = 'block';
+                    content.style.display = 'none';
+                } else {
+                    empty.style.display = 'none';
+                    content.style.display = 'block';
+
+                    // 生成贴吧卡片
+                    content.innerHTML = activeBars.map(function(bar) {
+                        const description = bar.description || '暂无简介';
+                        const shortDesc = description.length > 50 ? description.substring(0, 50) + '...' : description;
 
                 loading.style.display = 'none';
                 
@@ -426,110 +546,78 @@
                 content.innerHTML = '<div class="col-12"><p class="text-danger text-center">加载失败: ' + err.message + '</p></div>';
                 content.style.display = 'block';
             }
+        } catch (err) {
+            loading.style.display = 'none';
+            console.error('加载失败:', err);
+            content.innerHTML = '<div class="col-12"><p class="text-danger text-center">加载失败: ' + err.message + '</p></div>';
+            content.style.display = 'block';
+        }
+    }
+
+    // 查看贴吧详情
+    function viewBar(barId) {
+        window.location.href = 'dispBar.jsp?id=' + barId;
+    }
+
+    // 收藏磁贴分页逻辑（如果存在）
+    (function () {
+        const tiles = document.querySelectorAll('#favTiles .col');
+        if (tiles.length === 0) return;
+
+        const pageSize = 4;
+        const pagination = document.getElementById('favPagination');
+        const prevBtn = document.getElementById('prevPage');
+        const nextBtn = document.getElementById('nextPage');
+
+        if (!pagination || !prevBtn || !nextBtn) return;
+
+        const totalPages = Math.ceil(tiles.length / pageSize);
+        let currentPage = 1;
+
+        function updateButtons() {
+            prevBtn.classList.toggle('disabled', currentPage === 1);
+            nextBtn.classList.toggle('disabled', currentPage === totalPages);
         }
 
-        // 查看贴吧详情
-        function viewBar(barId) {
-            window.location.href = 'dispBar.jsp?id=' + barId;
-        }
-
-        // 页面加载时自动加载贴吧列表
-        document.addEventListener('DOMContentLoaded', function() {
-            loadBars();
-            const refreshBtn = document.getElementById('btnRefreshBars');
-            if (refreshBtn) {
-                refreshBtn.addEventListener('click', loadBars);
-            }
-        });
-        document.addEventListener('DOMContentLoaded', function() {
-            loadBars();
-
-            const refreshBtn = document.getElementById('btnRefreshBars');
-            if (refreshBtn) {
-                refreshBtn.addEventListener('click', loadBars);
-            }
-
-            // 创建贴吧按钮点击事件
-            const createBarBtn = document.querySelector('a[href="RegisterBar.jsp"]');
-            if (createBarBtn) {
-                createBarBtn.addEventListener('click', function(e) {
-                    // 检查是否登录
-                    if (!isLoggedIn()) {
-                        e.preventDefault();
-                        alert('请先登录后再创建贴吧！');
-                        window.location.href = 'Login.jsp';
-                    }
-                });
-            }
-        });
-
-        // 检查登录状态
-        function isLoggedIn() {
-            // 这里可以根据实际情况判断，比如检查cookie或session
-            // 简单示例：检查是否有用户信息在session中（需要在JSP中设置）
-            // 或者通过API验证
-            return ${not empty sessionScope.user};
-        }
-
-        // 收藏磁贴分页逻辑（如果存在）
-        (function () {
-            const tiles = document.querySelectorAll('#favTiles .col');
-            if (tiles.length === 0) return;
-            
-            const pageSize = 4;
-            const pagination = document.getElementById('favPagination');
-            const prevBtn = document.getElementById('prevPage');
-            const nextBtn = document.getElementById('nextPage');
-            
-            if (!pagination || !prevBtn || !nextBtn) return;
-            
-            const totalPages = Math.ceil(tiles.length / pageSize);
-            let currentPage = 1;
-
-            function updateButtons() {
-                prevBtn.classList.toggle('disabled', currentPage === 1);
-                nextBtn.classList.toggle('disabled', currentPage === totalPages);
-            }
-            
-            function renderPage(page) {
-                currentPage = page;
-                tiles.forEach(function(div, idx) {
-                    div.style.display = (idx >= (page - 1) * pageSize && idx < page * pageSize) ? '' : 'none';
-                });
-                const pageItems = pagination.querySelectorAll('[data-page]');
-                for (var i = 0; i < pageItems.length; i++) {
-                    pageItems[i].classList.remove('active');
-                }
-                const activeLi = pagination.querySelector('[data-page="' + page + '"]');
-                if (activeLi) activeLi.classList.add('active');
-                updateButtons();
-            }
-
-            // 创建页码按钮
-            for (var i = 1; i <= totalPages; i++) {
-                const li = document.createElement('li');
-                li.className = 'page-item';
-                li.dataset.page = i;
-                li.innerHTML = '<a class="page-link" href="#">' + i + '</a>';
-                li.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    renderPage(parseInt(this.dataset.page));
-                });
-                pagination.insertBefore(li, nextBtn);
-            }
-            
-            prevBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                if (currentPage > 1) renderPage(currentPage - 1);
+        function renderPage(page) {
+            currentPage = page;
+            tiles.forEach(function(div, idx) {
+                div.style.display = (idx >= (page - 1) * pageSize && idx < page * pageSize) ? '' : 'none';
             });
-            
-            nextBtn.addEventListener('click', function(e) {
+            const pageItems = pagination.querySelectorAll('[data-page]');
+            for (var i = 0; i < pageItems.length; i++) {
+                pageItems[i].classList.remove('active');
+            }
+            const activeLi = pagination.querySelector('[data-page="' + page + '"]');
+            if (activeLi) activeLi.classList.add('active');
+            updateButtons();
+        }
+
+        // 创建页码按钮
+        for (var i = 1; i <= totalPages; i++) {
+            const li = document.createElement('li');
+            li.className = 'page-item';
+            li.dataset.page = i;
+            li.innerHTML = '<a class="page-link" href="#">' + i + '</a>';
+            li.addEventListener('click', function(e) {
                 e.preventDefault();
-                if (currentPage < totalPages) renderPage(currentPage + 1);
+                renderPage(parseInt(this.dataset.page));
             });
-            
-            renderPage(1);
-        })();
-    </script>
+            pagination.insertBefore(li, nextBtn);
+        }
+
+        prevBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (currentPage > 1) renderPage(currentPage - 1);
+        });
+
+        nextBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (currentPage < totalPages) renderPage(currentPage + 1);
+        });
+
+        renderPage(1);
+    })();
+</script>
 </body>
 </html>
