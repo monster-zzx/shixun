@@ -26,7 +26,7 @@
                         <button id="btnRefresh" class="btn btn-outline-primary btn-sm me-2">
                             <i class="bi bi-arrow-clockwise"></i> 刷新
                         </button>
-                        <a href="registerBar.jsp" class="btn btn-primary btn-sm">
+                        <a href="RegisterBar.jsp" class="btn btn-primary btn-sm">
                             <i class="bi bi-plus-circle"></i> 创建贴吧
                         </a>
                     </div>
