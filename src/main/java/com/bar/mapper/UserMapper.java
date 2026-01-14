@@ -1,5 +1,4 @@
 package com.bar.mapper;
-import com.bar.beans.Bar;
 import com.bar.beans.User;
 import com.bar.dto.LoginDTO;
 import com.bar.dto.UserQueryDTO;

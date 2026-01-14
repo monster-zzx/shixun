@@ -2,7 +2,10 @@
 <module version="4">
   <component name="AdditionalModuleElements">
     <content url="file://$MODULE_DIR$" dumb="true">
-      <excludeFolder url="file://$MODULE_DIR$/out" />
+      <sourceFolder url="file://$MODULE_DIR$/web" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/.idea/dataSources" />
+      <excludeFolder url="file://$MODULE_DIR$/src/test" />
+      <excludeFolder url="file://$MODULE_DIR$/src/test/java/com/bar/servlet" />
     </content>
   </component>
   <component name="FacetManager">
