@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bar.mapper.PostMapper">
+
+    <insert id="insertPost" parameterType="com.bar.beans.Post" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO post
+        (title, content, user_id, bar_id, view_count, like_count, comment_count, status, pubtime, updated_at)
+        VALUES
+        (#{title}, #{content}, #{userId}, #{barId}, #{viewCount}, #{likeCount}, #{commentCount}, #{status}, #{pubtime}, #{updatedAt})
+    </insert>
+
+    <select id="selectByBarId" resultType="com.bar.beans.Post">
+        SELECT * FROM post WHERE bar_id = #{barId} ORDER BY pubtime DESC
+    </select>
+
+    <select id="selectByUserId" resultType="com.bar.beans.Post">
+        SELECT * FROM post WHERE user_id = #{userId} ORDER BY pubtime DESC
+    </select>
+
+    <select id="selectById" resultType="com.bar.beans.Post">
+        SELECT * FROM post WHERE id = #{id}
+    </select>
+
+    <delete id="deletePostById" parameterType="int">
+        DELETE FROM post WHERE id = #{id}
+    </delete>
+
+    <update id="updatePost" parameterType="com.bar.beans.Post">
+        UPDATE post SET
+            title = #{title},
+            content = #{content},
+            view_count = #{viewCount},
+            like_count = #{likeCount},
+            comment_count = #{commentCount},
+            status = #{status},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <select id="selectAll" resultType="com.bar.beans.Post">
+        SELECT * FROM post ORDER BY pubtime DESC
+    </select>
+
+</mapper>

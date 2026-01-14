@@ -43,6 +43,20 @@
             background-color: #ffffff;
         }
         
+        .post-item {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .post-item:hover {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        
+        .post-item .card-title a:hover {
+            color: #667eea !important;
+        }
+        
         /* 加载动画 */
         .loading-spinner {
             display: flex;
@@ -287,31 +301,101 @@
             document.getElementById('errorMessage').textContent = message;
         }
 
-        // 加载帖子列表（预留功能）
-        function loadPosts() {
+        // 加载帖子列表
+        async function loadPosts() {
             const barId = getBarIdFromUrl();
             if (!barId) {
                 alert('缺少贴吧ID参数');
                 return;
             }
-            // TODO: 实现帖子列表加载
-            alert('帖子功能开发中，贴吧ID: ' + barId);
+
+            const container = document.getElementById('postListContainer');
+            
+            try {
+                container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">加载中...</span></div><p class="mt-3">正在加载帖子...</p></div>';
+
+                const resp = await fetch('api/post/create?barId=' + barId, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json;charset=UTF-8' }
+                });
+
+                const text = await resp.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    console.error('JSON解析失败:', text);
+                    container.innerHTML = '<div class="text-center py-5 text-danger"><i class="bi bi-exclamation-triangle" style="font-size: 3rem;"></i><p class="mt-3">数据格式错误</p></div>';
+                    return;
+                }
+
+                if (data && data.success) {
+                    const posts = data.data || [];
+                    if (posts.length === 0) {
+                        container.innerHTML = '<div class="text-center py-5 text-muted"><i class="bi bi-file-earmark-text" style="font-size: 3rem;"></i><p class="mt-3">暂无帖子</p><p class="small">成为第一个发帖的人吧！</p></div>';
+                    } else {
+                        let html = '';
+                        posts.forEach(function(post) {
+                            html += '<div class="card mb-3 post-item" style="border-left: 4px solid #667eea;">';
+                            html += '<div class="card-body">';
+                            html += '<div class="d-flex justify-content-between align-items-start">';
+                            html += '<div class="flex-grow-1">';
+                            html += '<h5 class="card-title mb-2"><a href="#" class="text-decoration-none text-dark" onclick="viewPost(' + post.id + ')">' + escapeHtml(post.title) + '</a></h5>';
+                            html += '<p class="card-text text-muted mb-2" style="max-height: 100px; overflow: hidden;">' + escapeHtml(post.content) + '</p>';
+                            html += '<div class="d-flex align-items-center gap-3 text-muted small">';
+                            html += '<span><i class="bi bi-person"></i> 用户ID: ' + post.userId + '</span>';
+                            html += '<span><i class="bi bi-clock"></i> ' + formatDateTime(post.pubtime) + '</span>';
+                            html += '</div>';
+                            html += '</div>';
+                            html += '<div class="text-end">';
+                            html += '<div class="d-flex flex-column gap-2">';
+                            html += '<span class="badge bg-light text-dark"><i class="bi bi-eye"></i> ' + (post.viewCount || 0) + '</span>';
+                            html += '<span class="badge bg-light text-dark"><i class="bi bi-hand-thumbs-up"></i> ' + (post.likeCount || 0) + '</span>';
+                            html += '<span class="badge bg-light text-dark"><i class="bi bi-chat"></i> ' + (post.commentCount || 0) + '</span>';
+                            html += '</div>';
+                            html += '</div>';
+                            html += '</div>';
+                            html += '</div>';
+                            html += '</div>';
+                        });
+                        container.innerHTML = html;
+                    }
+                } else {
+                    container.innerHTML = '<div class="text-center py-5 text-danger"><i class="bi bi-exclamation-triangle" style="font-size: 3rem;"></i><p class="mt-3">' + (data.message || '加载失败') + '</p></div>';
+                }
+            } catch (err) {
+                console.error('加载失败:', err);
+                container.innerHTML = '<div class="text-center py-5 text-danger"><i class="bi bi-exclamation-triangle" style="font-size: 3rem;"></i><p class="mt-3">加载失败: ' + err.message + '</p></div>';
+            }
         }
 
-        // 创建帖子（预留功能）
+        // 查看帖子详情
+        function viewPost(postId) {
+            alert('查看帖子详情功能开发中，帖子ID: ' + postId);
+        }
+
+        // HTML 转义
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 创建帖子
         function createPost() {
             const barId = getBarIdFromUrl();
             if (!barId) {
                 alert('缺少贴吧ID参数');
                 return;
             }
-            // TODO: 实现创建帖子功能
-            alert('发帖功能开发中，贴吧ID: ' + barId);
+            window.location.href = "Post.jsp?barId=" + barId;
         }
 
-        // 页面加载时自动加载贴吧信息
+        // 页面加载时自动加载贴吧信息和帖子列表
         document.addEventListener('DOMContentLoaded', function() {
             loadBarInfo();
+            loadPosts();
         });
 
         // 顶栏按钮交互（如果存在）

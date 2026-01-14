@@ -103,10 +103,25 @@
             const data = await resp.json();
 
             if (data && data.success) {
-                showAlert('success', data.message || '创建成功');
-                // 这里没有现成的贴吧详情页路由，先停留并清空表单
-                form.reset();
-                form.classList.remove('was-validated');
+                const barId = data.data ? data.data.id : null;
+                const barStatus = data.data ? data.data.status : null;
+                
+                if (barId) {
+                    if (barStatus === 'PENDING') {
+                        showAlert('warning', '创建成功！贴吧需要审核通过后才能发帖，即将跳转到贴吧详情页...');
+                    } else if (barStatus === 'ACTIVE') {
+                        showAlert('success', '创建成功！即将跳转到贴吧详情页...');
+                    } else {
+                        showAlert('success', '创建成功！即将跳转到贴吧详情页...');
+                    }
+                    setTimeout(() => {
+                        window.location.href = 'dispBar.jsp?id=' + barId;
+                    }, 1500);
+                } else {
+                    showAlert('success', data.message || '创建成功');
+                    form.reset();
+                    form.classList.remove('was-validated');
+                }
             } else {
                 showAlert('danger', (data && data.message) ? data.message : '创建失败');
             }
