@@ -47,16 +47,16 @@
             transition: all 0.3s ease;
             cursor: pointer;
         }
-        
+
         .post-item:hover {
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             transform: translateY(-2px);
         }
-        
+
         .post-item .card-title a:hover {
             color: #667eea !important;
         }
-        
+
         /* 加载动画 */
         .loading-spinner {
             display: flex;
@@ -98,6 +98,7 @@
                                     </div>
                                     <div class="flex-grow-1">
                                         <h2 class="mb-2" id="barName">贴吧名称</h2>
+                                        <div id="barTagsContainer" class="d-flex flex-wrap gap-2"></div>
                                         <div class="d-flex align-items-center gap-3">
                                             <span id="barStatusBadge" class="badge bg-light text-dark">状态</span>
                                             <small>
@@ -106,10 +107,14 @@
                                             </small>
                                         </div>
                                     </div>
-                                    <div>
+                                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                                         <a href="index.jsp" class="btn btn-light btn-sm">
                                             <i class="bi bi-arrow-left"></i> 返回首页
                                         </a>
+                                        <button id="favoriteButton" class="btn btn-light btn-sm" onclick="toggleFavorite()" style="display: none;">
+                                            <i class="bi-star" id="favoriteIcon"></i>
+                                            <span id="favoriteText">收藏</span>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -279,6 +284,11 @@
                     document.title = (bar.name || '贴吧详情') + ' - 贴吧';
                     
                     content.style.display = 'block';
+
+                    // 加载收藏状态
+                    loadFavoriteStatus(bar.id);
+                    // 加载标签
+                    loadTagsForBar(bar.id);
                 } else {
                     showError(data.message || '贴吧不存在或已被删除');
                 }
@@ -310,7 +320,7 @@
             }
 
             const container = document.getElementById('postListContainer');
-            
+
             try {
                 container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">加载中...</span></div><p class="mt-3">正在加载帖子...</p></div>';
 
@@ -382,6 +392,29 @@
             return div.innerHTML;
         }
 
+        // 加载标签并渲染
+        async function loadTagsForBar(barId) {
+            const container = document.getElementById('barTagsContainer');
+            container.innerHTML = '';
+            try {
+                const resp = await fetch('api/tag/byBar?barId=' + barId, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json;charset=UTF-8' }
+                });
+                if (!resp.ok) return;
+                const data = await resp.json();
+                if (data && data.success && data.data) {
+                    data.data.forEach(tag => {
+                        const span = document.createElement('span');
+                        span.className = 'badge me-2';
+                        span.style.backgroundColor = tag.color || '#6c757d';
+                        span.textContent = tag.name;
+                        container.appendChild(span);
+                    });
+                }
+            } catch (e) { console.error('加载标签失败', e); }
+        }
+
         // 创建帖子
         function createPost() {
             const barId = getBarIdFromUrl();
@@ -390,6 +423,121 @@
                 return;
             }
             window.location.href = "Post.jsp?barId=" + barId;
+        }
+
+        // 加载收藏状态
+        async function loadFavoriteStatus(barId) {
+            try {
+                const resp = await fetch('api/bar/BarMember?barId=' + barId, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json;charset=UTF-8' }
+                });
+
+                const text = await resp.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    console.error('JSON解析失败:', text);
+                    // 如果未登录或其他错误，隐藏收藏按钮
+                    document.getElementById('favoriteButton').style.display = 'none';
+                    return;
+                }
+
+                if (data && data.success && data.data) {
+                    const isFavorite = data.data.isFavorite || false;
+                    updateFavoriteButton(isFavorite);
+                    document.getElementById('favoriteButton').style.display = '';
+                } else {
+                    // 未登录或其他错误，隐藏收藏按钮
+                    document.getElementById('favoriteButton').style.display = 'none';
+                }
+            } catch (err) {
+                console.error('加载收藏状态失败:', err);
+                // 出错时隐藏收藏按钮
+                document.getElementById('favoriteButton').style.display = 'none';
+            }
+        }
+
+        // 更新收藏按钮显示状态
+        function updateFavoriteButton(isFavorite) {
+            const icon = document.getElementById('favoriteIcon');
+            const text = document.getElementById('favoriteText');
+            const button = document.getElementById('favoriteButton');
+
+            if (isFavorite) {
+                icon.className = 'bi-star-fill';
+                text.textContent = '取消收藏';
+                button.classList.remove('btn-light');
+                button.classList.add('btn-warning');
+            } else {
+                icon.className = 'bi-star';
+                text.textContent = '收藏';
+                button.classList.remove('btn-warning');
+                button.classList.add('btn-light');
+            }
+        }
+
+        // 切换收藏状态
+        async function toggleFavorite() {
+            const barId = getBarIdFromUrl();
+            if (!barId) {
+                alert('缺少贴吧ID参数');
+                return;
+            }
+
+            const button = document.getElementById('favoriteButton');
+            const icon = document.getElementById('favoriteIcon');
+            const text = document.getElementById('favoriteText');
+            const currentIsFavorite = icon.className.includes('star-fill');
+
+            // 禁用按钮，防止重复点击
+            button.disabled = true;
+            const originalText = text.textContent;
+            text.textContent = '处理中...';
+
+            try {
+                const action = currentIsFavorite ? 'remove' : 'add';
+                const resp = await fetch('api/bar/BarMember', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: 'action=' + action + '&barId=' + barId
+                });
+
+                const text = await resp.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    console.error('JSON解析失败:', text);
+                    alert('操作失败，请稍后再试');
+                    text.textContent = originalText;
+                    button.disabled = false;
+                    return;
+                }
+
+                if (data && data.success) {
+                    // 更新按钮状态
+                    const newIsFavorite = data.data.isFavorite;
+                    updateFavoriteButton(newIsFavorite);
+
+                    // 触发自定义事件，通知侧边栏刷新收藏列表
+                    window.dispatchEvent(new CustomEvent('favoriteChanged', {
+                        detail: { barId: barId, isFavorite: newIsFavorite }
+                    }));
+                } else {
+                    alert(data.message || '操作失败，请稍后再试');
+                    text.textContent = originalText;
+                }
+            } catch (err) {
+                console.error('操作失败:', err);
+                alert('操作失败：' + err.message);
+                text.textContent = originalText;
+            } finally {
+                button.disabled = false;
+            }
         }
 
         // 页面加载时自动加载贴吧信息和帖子列表
@@ -403,66 +551,6 @@
         if (btnNotify) btnNotify.addEventListener('click', function() { alert('暂无新通知'); });
         const btnMsg = document.getElementById('btnMsg');
         if (btnMsg) btnMsg.addEventListener('click', function() { alert('暂无新私信'); });
-
-        // 收藏磁贴分页逻辑（如果存在）
-        (function () {
-            const tiles = document.querySelectorAll('#favTiles .col');
-            if (tiles.length === 0) return;
-            
-            const pageSize = 4;
-            const pagination = document.getElementById('favPagination');
-            const prevBtn = document.getElementById('prevPage');
-            const nextBtn = document.getElementById('nextPage');
-            
-            if (!pagination || !prevBtn || !nextBtn) return;
-            
-            const totalPages = Math.ceil(tiles.length / pageSize);
-            let currentPage = 1;
-
-            function updateButtons() {
-                prevBtn.classList.toggle('disabled', currentPage === 1);
-                nextBtn.classList.toggle('disabled', currentPage === totalPages);
-            }
-            
-            function renderPage(page) {
-                currentPage = page;
-                tiles.forEach(function(div, idx) {
-                    div.style.display = (idx >= (page - 1) * pageSize && idx < page * pageSize) ? '' : 'none';
-                });
-                const pageItems = pagination.querySelectorAll('[data-page]');
-                for (var i = 0; i < pageItems.length; i++) {
-                    pageItems[i].classList.remove('active');
-                }
-                const activeLi = pagination.querySelector('[data-page="' + page + '"]');
-                if (activeLi) activeLi.classList.add('active');
-                updateButtons();
-            }
-
-            // 创建页码按钮
-            for (var i = 1; i <= totalPages; i++) {
-                const li = document.createElement('li');
-                li.className = 'page-item';
-                li.dataset.page = i;
-                li.innerHTML = '<a class="page-link" href="#">' + i + '</a>';
-                li.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    renderPage(parseInt(this.dataset.page));
-                });
-                pagination.insertBefore(li, nextBtn);
-            }
-            
-            prevBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                if (currentPage > 1) renderPage(currentPage - 1);
-            });
-            
-            nextBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                if (currentPage < totalPages) renderPage(currentPage + 1);
-            });
-            
-            renderPage(1);
-        })();
     </script>
 </body>
 </html>

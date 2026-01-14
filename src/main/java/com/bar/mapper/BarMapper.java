@@ -31,4 +31,16 @@ public interface BarMapper {
     
     // 更新贴吧信息
     Boolean updateBar(Bar bar);
+
+    // 用户加入贴吧（成为某贴吧的成员）
+    Boolean joinBar(@Param("barId") Integer barId, 
+                     @Param("userId") Integer userId, 
+                     @Param("role") String role);
+
+    // 检查用户是否已经是某贴吧的成员
+    Integer isMember(@Param("barId") Integer barId, @Param("userId") Integer userId);
+
+    // 用户退出贴吧（取消收藏）
+    Boolean leaveBar(@Param("barId") Integer barId, @Param("userId") Integer userId);
+
 }

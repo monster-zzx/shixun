@@ -101,6 +101,12 @@
                             <option value="REJECTED">已拒绝</option>
                         </select>
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label">标签</label>
+                        <div id="editTagList" class="d-flex flex-wrap gap-2 border rounded p-2" style="min-height:64px;max-height:160px;overflow:auto;"></div>
+                        <input type="hidden" id="editSelectedTags" value="">
+                        <div class="form-text">点击标签可切换选中，可多选</div>
+                    </div>
                 </form>
             </div>
             <div class="modal-footer">
@@ -115,6 +121,58 @@
 
 <script>
     var editModal = null;
+    const tagCache = { all: null };
+
+    // 加载所有标签（缓存）
+    async function loadAllTags() {
+        if (tagCache.all) return tagCache.all;
+        try {
+            const resp = await fetch('api/tag/list');
+            if (!resp.ok) return [];
+            const data = await resp.json();
+            tagCache.all = (data && data.success) ? data.data : [];
+            return tagCache.all;
+        } catch (e) { console.error('加载标签失败', e); return []; }
+    }
+
+    // 渲染编辑弹窗中的标签列表
+    async function renderEditTags(barId) {
+        const wrap = document.getElementById('editTagList');
+        wrap.innerHTML = '<span class="text-muted small">加载中...</span>';
+        const [allTags, barTags] = await Promise.all([
+            loadAllTags(),
+            (async () => {
+                const r = await fetch('api/tag/byBar?barId='+barId);
+                if (!r.ok) return [];
+                const d = await r.json();
+                return (d && d.success) ? d.data : [];
+            })()
+        ]);
+        const selectedSet = new Set(barTags.map(t=>t.id));
+        wrap.innerHTML = '';
+        allTags.forEach(tag=>{
+            const span=document.createElement('span');
+            span.className='tag-item badge';
+            span.dataset.id=tag.id;
+            span.textContent=tag.name;
+            span.style.backgroundColor = selectedSet.has(tag.id)? (tag.color||'#0d6efd') : '#f8f9fa';
+            span.style.color = selectedSet.has(tag.id)? '#fff':'#000';
+            if(selectedSet.has(tag.id)) span.classList.add('selected');
+            span.onclick=function(){
+                if(this.classList.contains('selected')){
+                    this.classList.remove('selected');
+                    this.style.backgroundColor='#f8f9fa';
+                    this.style.color='#000';
+                }else{
+                    this.classList.add('selected');
+                    this.style.backgroundColor=tag.color||'#0d6efd';
+                    this.style.color='#fff';
+                }
+            };
+            wrap.appendChild(span);
+        });
+    }
+    
 
     function showAlert(type, text) {
         const box = document.getElementById('alertBox');
@@ -245,6 +303,9 @@
                 document.getElementById('editDescription').value = bar.description || '';
                 document.getElementById('editStatus').innerHTML = getStatusSelectOptions(bar.status);
 
+                // 加载并渲染标签
+                await renderEditTags(bar.id);
+
                 if (!editModal) {
                     editModal = new bootstrap.Modal(document.getElementById('editModal'));
                 }
@@ -278,7 +339,8 @@
                     id: parseInt(id),
                     name: name,
                     description: description,
-                    status: status
+                    status: status,
+                    tagIds: Array.from(document.querySelectorAll('#editTagList .tag-item.selected')).map(el=>parseInt(el.dataset.id))
                 })
             });
 
