@@ -41,6 +41,7 @@ public class BarManageServlet extends HttpServlet {
 
             String action = request.getParameter("action");
             String idParam = request.getParameter("id");
+            String statusParam = request.getParameter("status");
 
             // 查询单个贴吧详情
             if ("detail".equals(action) && idParam != null) {
@@ -54,8 +55,13 @@ public class BarManageServlet extends HttpServlet {
                 return;
             }
 
-            // 查询所有贴吧列表
-            List<Bar> bars = barService.getAllBars();
+            // 查询贴吧列表
+            List<Bar> bars;
+            if ("active".equals(statusParam)) {
+                bars = barService.getActiveBars();
+            } else {
+                bars = barService.getAllBars();
+            }
             out.write(JsonResponse.success("查询成功", bars));
         } catch (Exception e) {
             e.printStackTrace();

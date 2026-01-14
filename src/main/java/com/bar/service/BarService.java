@@ -142,6 +142,16 @@ public class BarService {
     }
 
     /**
+     * 查询所有已激活的贴吧（用于发帖选择）
+     */
+    public List<Bar> getActiveBars() {
+        try (SqlSession sqlSession = MybatisUtil.getSqlSession()) {
+            BarMapper mapper = sqlSession.getMapper(BarMapper.class);
+            return mapper.findByStatus("ACTIVE");
+        }
+    }
+
+    /**
      * 根据ID查询贴吧详情
      */
     public Bar getBarById(Integer id) {
