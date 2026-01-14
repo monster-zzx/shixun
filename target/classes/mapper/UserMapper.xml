@@ -297,7 +297,7 @@
     </select>
     <!-- 根据用户ID查询该用户加入的所有贴吧列表（通过bar_member表JOIN查询） -->
     <select id="selectBarsByUserId" parameterType="Integer" resultType="com.bar.beans.Bar">
-        SELECT 
+        SELECT
             b.id,
             b.name,
             b.description,

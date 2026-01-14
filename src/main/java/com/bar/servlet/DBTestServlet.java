@@ -226,6 +226,38 @@ public class DBTestServlet extends HttpServlet {
                 sqlSession.commit();
                 sqlSession.close();
 
+            } else if ("createPostTable".equals(action)) {
+                SqlSession sqlSession = MybatisUtil.getSqlSession();
+                Connection conn = sqlSession.getConnection();
+                Statement stmt = conn.createStatement();
+
+                String sql = "CREATE TABLE IF NOT EXISTS post (" +
+                        "id INT PRIMARY KEY AUTO_INCREMENT, " +
+                        "title VARCHAR(200) NOT NULL, " +
+                        "content TEXT NOT NULL, " +
+                        "user_id INT NOT NULL, " +
+                        "bar_id INT NOT NULL, " +
+                        "view_count INT DEFAULT 0, " +
+                        "like_count INT DEFAULT 0, " +
+                        "comment_count INT DEFAULT 0, " +
+                        "status VARCHAR(20) DEFAULT 'ACTIVE', " +
+                        "pubtime DATETIME DEFAULT CURRENT_TIMESTAMP, " +
+                        "updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, " +
+                        "FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE, " +
+                        "FOREIGN KEY (bar_id) REFERENCES bar(id) ON DELETE CASCADE, " +
+                        "INDEX idx_user_id (user_id), " +
+                        "INDEX idx_bar_id (bar_id), " +
+                        "INDEX idx_status (status), " +
+                        "INDEX idx_pubtime (pubtime)" +
+                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+
+                stmt.execute(sql);
+
+                result.addProperty("success", true);
+                result.addProperty("message", "post表创建成功");
+                sqlSession.commit();
+                sqlSession.close();
+
             } else if ("testQuery".equals(action)) {
                 // 测试SQL查询
                 String sql = params.get("sql") != null ? params.get("sql") :
