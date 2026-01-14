@@ -55,4 +55,26 @@
             updated_at = NOW()
         WHERE id = #{id}
     </update>
+
+    <!-- 用户加入贴吧（成为某贴吧的成员） -->
+    <!-- 使用INSERT IGNORE避免重复加入，如果已存在则忽略 -->
+    <insert id="joinBar">
+        INSERT IGNORE INTO bar_member (bar_id, user_id, role, joined_at)
+        VALUES (#{barId}, #{userId}, #{role}, NOW())
+    </insert>
+
+    <!-- 检查用户是否已经是某贴吧的成员 -->
+    <select id="isMember" resultType="Integer">
+        SELECT 1 FROM bar_member
+        WHERE bar_id = #{barId} AND user_id = #{userId}
+        LIMIT 1
+    </select>
+
+    <!-- 用户退出贴吧（取消收藏） -->
+    <!-- 只删除普通成员(MEMBER)角色，保留OWNER和ADMIN角色 -->
+    <delete id="leaveBar">
+        DELETE FROM bar_member
+        WHERE bar_id = #{barId} AND user_id = #{userId} AND role = 'MEMBER'
+    </delete>
+
 </mapper>
