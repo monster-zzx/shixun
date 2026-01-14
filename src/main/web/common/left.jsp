@@ -13,11 +13,51 @@
                         <img src="images/faces/face2.jpg" alt="头像" class="rounded-circle me-2" style="width:48px;height:48px;object-fit:cover;">
                         <div>
                             <h5 class="mb-0">${sessionScope.user.username}</h5>
-                                <%-- 去掉了 level 显示 --%>
+                            <!-- 显示用户状态 -->
+                            <c:if test="${sessionScope.userStatus == 'BANNED'}">
+                                <span class="badge bg-danger">已封禁</span>
+                            </c:if>
+                            <c:if test="${sessionScope.userStatus == 'MUTED'}">
+                                <span class="badge bg-warning">已禁言</span>
+                            </c:if>
                         </div>
                     </div>
 
+                    <!-- 管理员专属功能 -->
+                    <c:if test="${sessionScope.role == 'admin'}">
+                        <div class="mb-3">
+                            <a href="manageBar.jsp" class="btn btn-warning btn-sm w-100 mb-2">
+                                <i class="bi bi-gear-fill me-1"></i> 贴吧管理后台
+                            </a>
+                            <a href="manageUser.jsp" class="btn btn-danger btn-sm w-100">
+                                <i class="bi bi-people-fill me-1"></i> 用户管理
+                            </a>
+                        </div>
+                    </c:if>
 
+                    <!-- 普通用户的收藏磁贴（管理员不显示） -->
+                    <c:if test="${sessionScope.role != 'admin'}">
+                        <h6 class="mt-4">收藏的贴吧</h6>
+                        <div id="favTiles" class="row row-cols-2 g-2 mb-2">
+                            <div class="col"><div class="card text-center p-2 fav-tile">Java 贴吧</div></div>
+                            <div class="col"><div class="card text-center p-2 fav-tile">Python 贴吧</div></div>
+                            <div class="col"><div class="card text-center p-2 fav-tile">前端技术吧</div></div>
+                            <div class="col"><div class="card text-center p-2 fav-tile">算法刷题吧</div></div>
+                            <div class="col"><div class="card text-center p-2 fav-tile">电影交流吧</div></div>
+                            <div class="col"><div class="card text-center p-2 fav-tile">动漫研究所</div></div>
+                            <div class="col"><div class="card text-center p-2 fav-tile">足球迷吧</div></div>
+                            <div class="col"><div class="card text-center p-2 fav-tile">篮球吧</div></div>
+                            <div class="col"><div class="card text-center p-2 fav-tile">旅行分享吧</div></div>
+                            <div class="col"><div class="card text-center p-2 fav-tile">健身打卡吧</div></div>
+                        </div>
+                        <nav>
+                            <ul id="favPagination" class="pagination justify-content-center pagination-sm mb-0">
+                                <li class="page-item disabled" id="prevPage"><a class="page-link" href="#">&laquo;</a></li>
+                                <!-- page numbers 将插入这里 -->
+                                <li class="page-item" id="nextPage"><a class="page-link" href="#">&raquo;</a></li>
+                            </ul>
+                        </nav>
+                    </c:if>
 
                     <!-- 收藏磁贴 -->
                     <h6 class="mt-4">收藏的贴吧</h6>
