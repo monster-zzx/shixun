@@ -307,18 +307,7 @@ public class UserService {
             UserMapper mapper = sqlSession.getMapper(UserMapper.class);
 
             Map<String, Object> result = new HashMap<>();
-    /**
-     * 获取用户收藏的贴吧列表
-     */
-    public List<Bar> getFavoriteBars(Integer userId) {
-        try (SqlSession sqlSession = MybatisUtil.getSqlSession()) {
-            UserMapper mapper = sqlSession.getMapper(UserMapper.class);
-            return mapper.selectBarsByUserId(userId);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
+
 
             // 获取用户基本信息
             Map<String, Object> params = new HashMap<>();
@@ -336,7 +325,18 @@ public class UserService {
             return result;
         }
     }
-
+    /**
+     * 获取用户收藏的贴吧列表
+     */
+    public List<Bar> getFavoriteBars(Integer userId) {
+        try (SqlSession sqlSession = MybatisUtil.getSqlSession()) {
+            UserMapper mapper = sqlSession.getMapper(UserMapper.class);
+            return mapper.selectBarsByUserId(userId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
     /**
      * 更新用户信息
      */
