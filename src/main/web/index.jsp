@@ -10,14 +10,25 @@
     <!-- 引入 Bootstrap Icons 用于图标 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <style>
-        /* 贴吧列表区域固定高度，超出可滚动 */
+        /* 贴吧列表区域优化 */
         #barListContainer {
-            height: 400px;
+            height: 450px;
             overflow-y: auto;
             border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-            padding: 1rem;
+            border-radius: 0.5rem;
+            padding: 1.25rem;
             background-color: #f8f9fa;
+        }
+
+        /* 动态布局容器 */
+        .masonry-container {
+            column-count: 3;
+            column-gap: 1rem;
+        }
+
+        .masonry-item {
+            break-inside: avoid;
+            margin-bottom: 1rem;
         }
 
         /* 自定义滚动条样式 */
@@ -35,18 +46,131 @@
         #barListContainer::-webkit-scrollbar-thumb:hover {
             background: #555;
         }
-
-        /* 贴吧卡片样式 */
+        
+        /* 贴吧卡片样式优化 */
         .bar-card {
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: all 0.3s ease;
             cursor: pointer;
             height: 100%;
+            border: 1px solid #e9ecef;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            position: relative;
+            transform-origin: center;
         }
         .bar-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            border-color: #0d6efd;
+        }
+        .bar-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #0d6efd, #6610f2);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .bar-card:hover::before {
+            opacity: 1;
         }
 
+        /* 贴吧图标区域 */
+        .bar-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 0.75rem;
+            transition: all 0.3s ease;
+        }
+        .bar-card:hover .bar-icon {
+            transform: rotate(10deg) scale(1.1);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+        }
+
+        /* 贴吧卡片内容布局优化 */
+        .bar-card-body {
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .bar-title {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            color: #212529;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: color 0.2s ease;
+        }
+        .bar-card:hover .bar-title {
+            color: #0d6efd;
+        }
+        .bar-description {
+            color: #6c757d;
+            font-size: 0.85rem;
+            flex-grow: 1;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            transition: color 0.2s ease;
+        }
+        .bar-card:hover .bar-description {
+            color: #495057;
+        }
+        .bar-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 0.75rem;
+            font-size: 0.75rem;
+            color: #6c757d;
+        }
+
+        /* 加载动画 */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0,0,0,.1);
+            border-radius: 50%;
+            border-top-color: #0d6efd;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 淡入动画 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        /* 刷新按钮动画 */
+        .refreshing {
+            animation: spin 1s linear infinite;
+        }
+        
         /* 帖子区域样式 */
         #postListContainer {
             min-height: 300px;
@@ -70,6 +194,55 @@
         @keyframes slideDown {
             from { transform: translateY(-100%); }
             to { transform: translateY(0); }
+        }
+
+        /* 响应式设计优化 */
+        @media (max-width: 992px) {
+            .masonry-container {
+                column-count: 2;
+            }
+            .bar-card {
+                margin-bottom: 1rem;
+            }
+            .bar-icon {
+                width: 45px;
+                height: 45px;
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            #barListContainer {
+                height: 500px;
+                padding: 1rem;
+            }
+            .masonry-container {
+                column-count: 1;
+            }
+            .bar-card-body {
+                padding: 1rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            #barListContainer {
+                height: 550px;
+            }
+            .bar-card:hover {
+                transform: translateY(-3px) scale(1.01);
+            }
+            .bar-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 0.9rem;
+            }
+            .bar-title {
+                font-size: 0.9rem;
+            }
+            .bar-description {
+                font-size: 0.8rem;
+                -webkit-line-clamp: 3;
+            }
         }
     </style>
 </head>
@@ -130,26 +303,26 @@
                                     <i class="bi bi-plus-circle"></i> 创建贴吧
                                 </a>
                             </c:if>
+                            </div>
                         </div>
-                    </div>
-                    <div class="card-body p-0">
-                        <div id="barListContainer">
-                            <div id="barLoading" class="text-center py-5">
-                                <div class="spinner-border text-primary" role="status">
-                                    <span class="visually-hidden">加载中...</span>
+                        <div class="card-body p-0">
+                            <div id="barListContainer">
+                                <div id="barLoading" class="text-center py-5">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">加载中...</span>
+                                    </div>
+                                    <p class="mt-2 text-muted">正在加载贴吧列表...</p>
                                 </div>
-                                <p class="mt-2 text-muted">正在加载贴吧列表...</p>
-                            </div>
-                            <div id="barListContent" class="row g-3 p-3" style="display: none;">
-                                <!-- 动态填充贴吧卡片 -->
-                            </div>
-                            <div id="barEmpty" class="text-center py-5 text-muted" style="display: none;">
-                                <i class="bi bi-inbox" style="font-size: 3rem;"></i>
-                                <p class="mt-2">暂无已通过的贴吧</p>
+                                <div id="barListContent" class="masonry-container p-3" style="display: none;">
+                            <!-- 动态填充贴吧卡片 -->
+                        </div>
+                                <div id="barEmpty" class="text-center py-5 text-muted" style="display: none;">
+                                    <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                                    <p class="mt-2">暂无已通过的贴吧</p>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
                 <!-- 最新帖子区域（预留） -->
                 <div class="card shadow-sm">
@@ -256,15 +429,21 @@
         return badges[status] || '';
     }
 
-    // 加载贴吧列表
-    async function loadBars() {
-        const loading = document.getElementById('barLoading');
-        const content = document.getElementById('barListContent');
-        const empty = document.getElementById('barEmpty');
+        // 加载贴吧列表
+        async function loadBars() {
+            const loading = document.getElementById('barLoading');
+            const content = document.getElementById('barListContent');
+            const empty = document.getElementById('barEmpty');
+            const refreshBtn = document.getElementById('btnRefreshBars');
 
-        loading.style.display = 'block';
-        content.style.display = 'none';
-        empty.style.display = 'none';
+            loading.style.display = 'block';
+            content.style.display = 'none';
+            empty.style.display = 'none';
+
+            // 添加刷新按钮动画
+            if (refreshBtn) {
+                refreshBtn.querySelector('i').classList.add('refreshing');
+            }
 
         try {
             const resp = await fetch('api/bar/manage', {
@@ -284,53 +463,77 @@
 
             loading.style.display = 'none';
 
+            // 移除刷新按钮动画
+            if (refreshBtn) {
+                refreshBtn.querySelector('i').classList.remove('refreshing');
+            }
+
             if (data && data.success && data.data) {
                 // 只显示状态为 ACTIVE 的贴吧
                 const activeBars = data.data.filter(function(bar) {
                     return bar.status === 'ACTIVE';
                 });
 
-                if (activeBars.length === 0) {
-                    empty.style.display = 'block';
-                    content.style.display = 'none';
-                } else {
-                    empty.style.display = 'none';
-                    content.style.display = 'block';
+                    if (activeBars.length === 0) {
+                        empty.style.display = 'block';
+                        content.style.display = 'none';
+                    } else {
+                        empty.style.display = 'none';
+                        content.style.display = 'block';
+                        
+                        // 生成贴吧卡片
+                        content.innerHTML = activeBars.map(function(bar) {
+                            const description = bar.description || '暂无简介';
+                            const barName = bar.name || '未命名';
+                            const firstChar = barName.charAt(0).toUpperCase();
 
-                    // 生成贴吧卡片
-                    content.innerHTML = activeBars.map(function(bar) {
-                        const description = bar.description || '暂无简介';
-                        const shortDesc = description.length > 50 ? description.substring(0, 50) + '...' : description;
+                            // 随机生成不同高度的内容，使动态排列更明显
+                            const descriptionLength = Math.floor(Math.random() * 3) + 2;
+                            const randomDesc = description.length > 30 * descriptionLength ?
+                                description.substring(0, 30 * descriptionLength) + '...' : description;
 
-                        return '<div class="col-md-3 col-sm-6">' +
-                            '<div class="card bar-card h-100" onclick="viewBar(' + bar.id + ')">' +
-                            '<div class="card-body">' +
-                            '<h6 class="card-title mb-2">' +
-                            '<i class="bi bi-tag-fill text-primary"></i> ' +
-                            (bar.name || '未命名') +
-                            '</h6>' +
-                            '<p class="card-text text-muted small" style="min-height: 40px;">' + shortDesc + '</p>' +
-                            '<div class="d-flex justify-content-between align-items-center mt-2">' +
-                            '<small class="text-muted">' +
-                            '<i class="bi bi-calendar"></i> ' + formatDate(bar.pubtime) +
-                            '</small>' +
-                            getStatusBadge(bar.status) +
-                            '</div>' +
-                            '</div>' +
-                            '</div>' +
+                            return '<div class="masonry-item">' +
+                                '<div class="card bar-card h-100" onclick="viewBar(' + bar.id + ')">' +
+                                    '<div class="bar-card-body">' +
+                                        '<div class="d-flex align-items-center mb-3">' +
+                                            '<div class="bar-icon me-3">' + firstChar + '</div>' +
+                                            '<div class="flex-grow-1">' +
+                                                '<h6 class="bar-title mb-1">' + barName + '</h6>' +
+                                            '</div>' +
+                                        '</div>' +
+                                        '<p class="bar-description">' + randomDesc + '</p>' +
+                                        '<div class="bar-meta">' +
+                                            '<span class="text-muted">' + formatDate(bar.pubtime) + '</span>' +
+                                        '</div>' +
+                                    '</div>' +
+                                '</div>' +
                             '</div>';
-                    }).join('');
+                        }).join('');
+
+                        // 添加淡入动画
+                        const cards = content.querySelectorAll('.bar-card');
+                        cards.forEach((card, index) => {
+                            setTimeout(() => {
+                                card.classList.add('fade-in');
+                            }, index * 100);
+                        });
+                    }
+                } else {
+                    loading.innerHTML = '<p class="text-warning">' + (data.message || '加载失败') + '</p>';
                 }
-            } else {
-                loading.innerHTML = '<p class="text-warning">' + (data.message || '加载失败') + '</p>';
+            } catch (err) {
+                loading.style.display = 'none';
+
+                // 移除刷新按钮动画
+                if (refreshBtn) {
+                    refreshBtn.querySelector('i').classList.remove('refreshing');
+                }
+
+                console.error('加载失败:', err);
+                content.innerHTML = '<div class="col-12"><p class="text-danger text-center">加载失败: ' + err.message + '</p></div>';
+                content.style.display = 'block';
             }
-        } catch (err) {
-            loading.style.display = 'none';
-            console.error('加载失败:', err);
-            content.innerHTML = '<div class="col-12"><p class="text-danger text-center">加载失败: ' + err.message + '</p></div>';
-            content.style.display = 'block';
         }
-    }
 
     // 查看贴吧详情
     function viewBar(barId) {

@@ -47,16 +47,16 @@
             transition: all 0.3s ease;
             cursor: pointer;
         }
-
+        
         .post-item:hover {
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             transform: translateY(-2px);
         }
-
+        
         .post-item .card-title a:hover {
             color: #667eea !important;
         }
-
+        
         /* 加载动画 */
         .loading-spinner {
             display: flex;
@@ -320,7 +320,7 @@
             }
 
             const container = document.getElementById('postListContainer');
-
+            
             try {
                 container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">加载中...</span></div><p class="mt-3">正在加载帖子...</p></div>';
 
@@ -345,7 +345,11 @@
                         container.innerHTML = '<div class="text-center py-5 text-muted"><i class="bi bi-file-earmark-text" style="font-size: 3rem;"></i><p class="mt-3">暂无帖子</p><p class="small">成为第一个发帖的人吧！</p></div>';
                     } else {
                         let html = '';
+                        const currentUserId = getCurrentUserId();
+
                         posts.forEach(function(post) {
+                            const isAuthor = currentUserId && currentUserId == post.userId;
+
                             html += '<div class="card mb-3 post-item" style="border-left: 4px solid #667eea;">';
                             html += '<div class="card-body">';
                             html += '<div class="d-flex justify-content-between align-items-start">';
@@ -362,7 +366,14 @@
                             html += '<span class="badge bg-light text-dark"><i class="bi bi-eye"></i> ' + (post.viewCount || 0) + '</span>';
                             html += '<span class="badge bg-light text-dark"><i class="bi bi-hand-thumbs-up"></i> ' + (post.likeCount || 0) + '</span>';
                             html += '<span class="badge bg-light text-dark"><i class="bi bi-chat"></i> ' + (post.commentCount || 0) + '</span>';
-                            html += '</div>';
+
+                            // 如果是作者，显示删除按钮
+                            if (isAuthor) {
+                                html += '<button class="btn btn-sm btn-danger mt-2" onclick="deletePost(' + post.id + ')">';
+                                html += '<i class="bi bi-trash"></i> 删除';
+                                html += '</button>';
+                            }
+
                             html += '</div>';
                             html += '</div>';
                             html += '</div>';
@@ -382,6 +393,20 @@
         // 查看帖子详情
         function viewPost(postId) {
             alert('查看帖子详情功能开发中，帖子ID: ' + postId);
+        }
+
+        // 检查登录状态
+        function isLoggedIn() {
+            // 这里可以根据实际情况判断，比如检查cookie或session
+            // 简单示例：检查是否有用户信息在session中（需要在JSP中设置）
+            return ${not empty sessionScope.user};
+        }
+
+        // 获取当前登录用户ID
+        function getCurrentUserId() {
+            // 这里需要从session中获取当前用户ID
+            // 在实际应用中，可以通过隐藏字段或AJAX获取
+            return ${not empty sessionScope.user ? sessionScope.user.id : 'null'};
         }
 
         // HTML 转义
@@ -413,6 +438,41 @@
                     });
                 }
             } catch (e) { console.error('加载标签失败', e); }
+        }
+
+        // 删除帖子
+        async function deletePost(postId) {
+            if (!confirm('确定要删除这个帖子吗？删除后无法恢复。')) {
+                return;
+            }
+
+            try {
+                const resp = await fetch('api/post/' + postId, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json;charset=UTF-8' }
+                });
+
+                const text = await resp.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    console.error('JSON解析失败:', text);
+                    alert('删除失败：服务器返回格式错误');
+                    return;
+                }
+
+                if (data && data.success) {
+                    alert('删除成功');
+                    // 重新加载帖子列表
+                    loadPosts();
+                } else {
+                    alert('删除失败：' + (data.message || '未知错误'));
+                }
+            } catch (err) {
+                console.error('删除失败:', err);
+                alert('删除失败：' + err.message);
+            }
         }
 
         // 创建帖子
