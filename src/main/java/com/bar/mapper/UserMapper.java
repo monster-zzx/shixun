@@ -53,8 +53,6 @@ public interface UserMapper {
 
     // 根据用户ID查询该用户加入的所有贴吧列表（通过bar_member表关联查询）
     List<Bar> selectBarsByUserId(Integer id);
-}
-
     // ================ 新增的用户管理方法 ================
 
     // 13. 分页查询用户（支持搜索、状态过滤、角色过滤）
