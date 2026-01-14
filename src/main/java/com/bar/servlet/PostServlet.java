@@ -18,11 +18,91 @@ import java.io.PrintWriter;
 import java.util.List;
 import java.util.Map;
 
-@WebServlet("/api/post/create")
+@WebServlet("/api/post/*")
 public class PostServlet extends HttpServlet {
 
     private final PostService postService = new PostService();
     private final Gson gson = new Gson();
+
+    @Override
+    protected void service(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String method = request.getMethod();
+        String pathInfo = request.getPathInfo();
+        
+        if ("DELETE".equals(method) && pathInfo != null && pathInfo.matches("/\\d+")) {
+            // 处理删除请求 /api/post/{id}
+            doDelete(request, response);
+        } else if ("GET".equals(method)) {
+            doGet(request, response);
+        } else if ("POST".equals(method)) {
+            doPost(request, response);
+        } else {
+            response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+            response.getWriter().write(JsonResponse.error("不支持的请求方法"));
+        }
+    }
+
+    @Override
+    protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json;charset=UTF-8");
+        response.setCharacterEncoding("UTF-8");
+        PrintWriter out = response.getWriter();
+
+        try {
+            // 检查登录状态
+            HttpSession session = request.getSession(false);
+            if (session == null || session.getAttribute("userId") == null) {
+                out.write(JsonResponse.error("请先登录"));
+                return;
+            }
+
+            Integer currentUserId = (Integer) session.getAttribute("userId");
+            
+            // 从URL路径中获取帖子ID
+            String pathInfo = request.getPathInfo();
+            if (pathInfo == null || pathInfo.equals("/")) {
+                out.write(JsonResponse.error("缺少帖子ID"));
+                return;
+            }
+            
+            // 提取帖子ID (例如 /api/post/123 -> 123)
+            String postIdStr = pathInfo.substring(1);
+            Integer postId;
+            try {
+                postId = Integer.parseInt(postIdStr);
+            } catch (NumberFormatException e) {
+                out.write(JsonResponse.error("无效的帖子ID"));
+                return;
+            }
+            
+            // 获取帖子信息验证权限
+            Post post = postService.getPostById(postId);
+            if (post == null) {
+                out.write(JsonResponse.error("帖子不存在"));
+                return;
+            }
+            
+            // 检查是否是帖子作者或管理员（这里简化处理，只允许作者删除）
+            if (!post.getUserId().equals(currentUserId)) {
+                out.write(JsonResponse.error("没有权限删除此帖子"));
+                return;
+            }
+            
+            // 执行删除
+            boolean success = postService.deletePost(postId);
+            if (success) {
+                out.write(JsonResponse.success("删除成功"));
+            } else {
+                out.write(JsonResponse.error("删除失败"));
+            }
+            
+        } catch (IllegalStateException e) {
+            out.write(JsonResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            out.write(JsonResponse.error("系统错误：" + e.getMessage()));
+        }
+    }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {

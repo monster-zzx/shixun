@@ -62,171 +62,24 @@
                     <!-- 收藏磁贴 -->
                     <h6 class="mt-4">收藏的贴吧</h6>
                     <div id="favTiles" class="row row-cols-2 g-2 mb-2">
-                        <!-- 加载状态 -->
-                        <div id="favLoading" class="col-12 text-center py-3">
-                            <div class="spinner-border spinner-border-sm text-primary" role="status">
-                                <span class="visually-hidden">加载中...</span>
-                            </div>
-                            <small class="text-muted ms-2">加载中...</small>
-                        </div>
-                        <!-- 空状态 -->
-                        <div id="favEmpty" class="col-12 text-center py-3" style="display: none;">
-                            <i class="bi bi-star" style="font-size: 2rem; color: #ccc;"></i>
-                            <p class="text-muted small mb-0 mt-2">暂无收藏的贴吧</p>
-                        </div>
-                        <!-- 收藏列表将动态插入这里 -->
+                        <div class="col"><div class="card text-center p-2 fav-tile">Java 贴吧</div></div>
+                        <div class="col"><div class="card text-center p-2 fav-tile">Python 贴吧</div></div>
+                        <div class="col"><div class="card text-center p-2 fav-tile">前端技术吧</div></div>
+                        <div class="col"><div class="card text-center p-2 fav-tile">算法刷题吧</div></div>
+                        <div class="col"><div class="card text-center p-2 fav-tile">电影交流吧</div></div>
+                        <div class="col"><div class="card text-center p-2 fav-tile">动漫研究所</div></div>
+                        <div class="col"><div class="card text-center p-2 fav-tile">足球迷吧</div></div>
+                        <div class="col"><div class="card text-center p-2 fav-tile">篮球吧</div></div>
+                        <div class="col"><div class="card text-center p-2 fav-tile">旅行分享吧</div></div>
+                        <div class="col"><div class="card text-center p-2 fav-tile">健身打卡吧</div></div>
                     </div>
-                    <nav id="favPaginationNav" style="display: none;">
+                    <nav>
                         <ul id="favPagination" class="pagination justify-content-center pagination-sm mb-0">
                             <li class="page-item disabled" id="prevPage"><a class="page-link" href="#">&laquo;</a></li>
                             <!-- page numbers 将插入这里 -->
                             <li class="page-item" id="nextPage"><a class="page-link" href="#">&raquo;</a></li>
                         </ul>
                     </nav>
-                    <script>
-                        // 加载收藏的贴吧列表
-                        (function() {
-                            const favTiles = document.getElementById('favTiles');
-                            const favLoading = document.getElementById('favLoading');
-                            const favEmpty = document.getElementById('favEmpty');
-                            const favPaginationNav = document.getElementById('favPaginationNav');
-
-                            // 加载收藏列表的函数
-                            function loadFavoriteBars() {
-                                favLoading.style.display = 'block';
-                                favEmpty.style.display = 'none';
-                                
-                                fetch('api/user/favoriteBars', {
-                                    method: 'GET',
-                                    headers: { 'Content-Type': 'application/json;charset=UTF-8' }
-                                })
-                                .then(resp => resp.text())
-                                .then(text => {
-                                    try {
-                                        const data = JSON.parse(text);
-                                        favLoading.style.display = 'none';
-
-                                        if (data && data.success && data.data && data.data.length > 0) {
-                                            const bars = data.data;
-                                            renderFavoriteBars(bars);
-                                        } else {
-                                            favEmpty.style.display = 'block';
-                                        }
-                                    } catch (e) {
-                                        console.error('解析失败:', e);
-                                        favLoading.style.display = 'none';
-                                        favEmpty.style.display = 'block';
-                                    }
-                                })
-                                .catch(err => {
-                                    console.error('加载失败:', err);
-                                    favLoading.style.display = 'none';
-                                    favEmpty.style.display = 'block';
-                                });
-                            }
-
-                            // 初始加载
-                            loadFavoriteBars();
-
-                            // 监听收藏变化事件，自动刷新列表
-                            window.addEventListener('favoriteChanged', function(event) {
-                                loadFavoriteBars();
-                            });
-
-                            // 渲染收藏贴吧列表
-                            function renderFavoriteBars(bars) {
-                                // 清空现有内容（保留加载和空状态元素）
-                                const existingTiles = favTiles.querySelectorAll('.fav-tile-item');
-                                existingTiles.forEach(el => el.remove());
-
-                                bars.forEach(bar => {
-                                    const col = document.createElement('div');
-                                    col.className = 'col fav-tile-item';
-                                    const card = document.createElement('div');
-                                    card.className = 'card text-center p-2 fav-tile';
-                                    card.style.cursor = 'pointer';
-                                    card.title = bar.description || bar.name;
-                                    card.textContent = bar.name || '未命名贴吧';
-                                    
-                                    // 点击跳转到贴吧详情页
-                                    card.addEventListener('click', function() {
-                                        window.location.href = 'dispBar.jsp?id=' + bar.id;
-                                    });
-                                    
-                                    col.appendChild(card);
-                                    favTiles.appendChild(col);
-                                });
-
-                                // 初始化分页（如果超过4个）
-                                if (bars.length > 4) {
-                                    initPagination();
-                                }
-                            }
-
-                            // 初始化分页功能
-                            function initPagination() {
-                                const tiles = favTiles.querySelectorAll('.fav-tile-item');
-                                if (tiles.length === 0) return;
-
-                                const pageSize = 4;
-                                const pagination = document.getElementById('favPagination');
-                                const prevBtn = document.getElementById('prevPage');
-                                const nextBtn = document.getElementById('nextPage');
-
-                                if (!pagination || !prevBtn || !nextBtn) return;
-
-                                // 清空现有页码按钮
-                                const existingPages = pagination.querySelectorAll('[data-page]');
-                                existingPages.forEach(el => el.remove());
-
-                                const totalPages = Math.ceil(tiles.length / pageSize);
-                                let currentPage = 1;
-
-                                function updateButtons() {
-                                    prevBtn.classList.toggle('disabled', currentPage === 1);
-                                    nextBtn.classList.toggle('disabled', currentPage === totalPages);
-                                }
-
-                                function renderPage(page) {
-                                    currentPage = page;
-                                    tiles.forEach(function(div, idx) {
-                                        div.style.display = (idx >= (page - 1) * pageSize && idx < page * pageSize) ? '' : 'none';
-                                    });
-                                    const pageItems = pagination.querySelectorAll('[data-page]');
-                                    pageItems.forEach(item => item.classList.remove('active'));
-                                    const activeLi = pagination.querySelector('[data-page="' + page + '"]');
-                                    if (activeLi) activeLi.classList.add('active');
-                                    updateButtons();
-                                }
-
-                                // 创建页码按钮
-                                for (let i = 1; i <= totalPages; i++) {
-                                    const li = document.createElement('li');
-                                    li.className = 'page-item';
-                                    li.dataset.page = i;
-                                    li.innerHTML = '<a class="page-link" href="#">' + i + '</a>';
-                                    li.addEventListener('click', function(e) {
-                                        e.preventDefault();
-                                        renderPage(parseInt(this.dataset.page));
-                                    });
-                                    pagination.insertBefore(li, nextBtn);
-                                }
-
-                                prevBtn.addEventListener('click', function(e) {
-                                    e.preventDefault();
-                                    if (currentPage > 1) renderPage(currentPage - 1);
-                                });
-
-                                nextBtn.addEventListener('click', function(e) {
-                                    e.preventDefault();
-                                    if (currentPage < totalPages) renderPage(currentPage + 1);
-                                });
-
-                                favPaginationNav.style.display = 'block';
-                                renderPage(1);
-                            }
-                        })();
-                    </script>
 
                     <!-- 贴吧分类 -->
                     <h6 class="mt-4">贴吧分类</h6>
