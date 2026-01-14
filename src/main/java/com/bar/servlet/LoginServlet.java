@@ -59,7 +59,6 @@ public class LoginServlet extends HttpServlet {
             session.setAttribute("userId", user.getId());
             session.setAttribute("username", user.getUsername());
             session.setAttribute("role", user.getRole());
-            session.setAttribute("status", user.getStatus()); // 添加状态信息
 
             // 设置Session过期时间（默认30分钟，记住我则为7天）
             if ("true".equals(loginDTO.getRememberMe())) {
@@ -74,7 +73,6 @@ public class LoginServlet extends HttpServlet {
             data.put("username", user.getUsername());
             data.put("email", user.getEmail());
             data.put("role", user.getRole());
-            data.put("status", user.getStatus()); // 返回状态信息
             data.put("lastLoginTime", user.getLastLoginTime());
 
             out.write(JsonResponse.success("登录成功", data));

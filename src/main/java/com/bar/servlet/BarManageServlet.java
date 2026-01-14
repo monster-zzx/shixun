@@ -100,26 +100,12 @@ public class BarManageServlet extends HttpServlet {
                     return;
                 }
 
-                java.util.List<Integer> tagIds = null;
-                if (params.get("tagIds") instanceof java.util.List) {
-                    tagIds = new java.util.ArrayList<>();
-                    for (Object o : (java.util.List<?>) params.get("tagIds")) {
-                        if (o == null) continue;
-                        if (o instanceof Number) tagIds.add(((Number) o).intValue());
-                        else {
-                            try { tagIds.add(Integer.parseInt(o.toString())); } catch (NumberFormatException ignore) {}
-                        }
-                    }
-                }
-
                 boolean success = barService.updateBar(id, name, description, status);
-                if (success && tagIds != null) {
-                    // 重新绑定标签
-                    com.bar.service.TagService ts = new com.bar.service.TagService();
-                    ts.removeAllTagsFromBar(id);
-                    ts.addTagIdsToBar(id, tagIds);
+                if (success) {
+                    out.write(JsonResponse.success("更新成功"));
+                } else {
+                    out.write(JsonResponse.error("更新失败"));
                 }
-                out.write(JsonResponse.success("更新成功"));
             } else if ("delete".equals(action)) {
                 // 删除贴吧
                 Integer id = getInteger(params, "id");

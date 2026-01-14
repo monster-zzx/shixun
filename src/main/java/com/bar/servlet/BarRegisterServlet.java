@@ -1,7 +1,6 @@
 package com.bar.servlet;
 
 import com.bar.beans.Bar;
-
 import com.bar.service.BarService;
 import com.bar.util.JsonResponse;
 import com.google.gson.Gson;
@@ -14,7 +13,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.Map;
 
 /**
@@ -45,27 +43,14 @@ public class BarRegisterServlet extends HttpServlet {
             Map<String, Object> params = gson.fromJson(request.getReader(), Map.class);
             String name = params.get("name") == null ? null : ((String) params.get("name")).trim();
             String description = params.get("description") == null ? null : ((String) params.get("description")).trim();
-            java.util.List<Integer> tagIds = new java.util.ArrayList<>();
-            if (params.get("tagIds") != null && params.get("tagIds") instanceof java.util.List) {
-                java.util.List<?> arr = (java.util.List<?>) params.get("tagIds");
-                for (Object o : arr) {
-                    if (o == null) continue;
-                    // Gson 会把数字解析为 Double
-                    if (o instanceof Number) {
-                        tagIds.add(((Number) o).intValue());
-                    } else {
-                        try { tagIds.add(Integer.parseInt(o.toString())); } catch (NumberFormatException ignore) {}
-                    }
-                }
-            }
+
             if (name == null || name.isEmpty()) {
                 out.write(JsonResponse.error("贴吧名称不能为空"));
                 return;
             }
 
             // 调用 Service
-            Bar bar = barService.createBar(name, description, userId, tagIds);
-
+            Bar bar = barService.createBar(name, description, userId);
 
             // 构建成功响应
             JsonObject data = new JsonObject();
