@@ -1,4 +1,5 @@
 package com.bar.mapper;
+import com.bar.beans.Bar;
 import com.bar.beans.User;
 import com.bar.dto.LoginDTO;
 import com.bar.dto.UserQueryDTO;
@@ -48,5 +49,8 @@ public interface UserMapper {
     int deleteUser(Integer id);
 
     User selectUser(int i);
+
+    // 根据用户ID查询该用户加入的所有贴吧列表（通过bar_member表关联查询）
+    List<Bar> selectBarsByUserId(Integer id);
 }
 

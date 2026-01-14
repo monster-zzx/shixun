@@ -1,4 +1,5 @@
 package com.bar.service;
+import com.bar.beans.Bar;
 import com.bar.beans.User;
 import com.bar.dto.LoginDTO;
 import com.bar.dto.UserQueryDTO;
@@ -178,5 +179,17 @@ public class UserService {
         }
     }
 
+    /**
+     * 获取用户收藏的贴吧列表
+     */
+    public List<Bar> getFavoriteBars(Integer userId) {
+        try (SqlSession sqlSession = MybatisUtil.getSqlSession()) {
+            UserMapper mapper = sqlSession.getMapper(UserMapper.class);
+            return mapper.selectBarsByUserId(userId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
 }

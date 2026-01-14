@@ -295,4 +295,20 @@
         AND status != 'deleted'  <!-- 排除已删除的用户 -->
         LIMIT 1
     </select>
+    <!-- 根据用户ID查询该用户加入的所有贴吧列表（通过bar_member表JOIN查询） -->
+    <select id="selectBarsByUserId" parameterType="Integer" resultType="com.bar.beans.Bar">
+        SELECT 
+            b.id,
+            b.name,
+            b.description,
+            b.icon_url AS iconUrl,
+            b.owner_user_id AS ownerUserId,
+            b.status,
+            b.pubtime,
+            b.updated_at AS updatedAt
+        FROM bar_member bm
+        INNER JOIN bar b ON bm.bar_id = b.id
+        WHERE bm.user_id = #{id}
+        ORDER BY bm.joined_at DESC
+    </select>
 </mapper>
