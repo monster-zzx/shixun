@@ -32,7 +32,6 @@
     <mappers>
         <mapper resource="mapper/UserMapper.xml"/>
         <mapper resource="mapper/BarMapper.xml"/>
-        <mapper resource="mapper/TagMapper.xml"/>
         <mapper resource="mapper/PostMapper.xml"/>
     </mappers>
 </configuration>

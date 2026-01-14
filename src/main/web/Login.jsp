@@ -53,14 +53,6 @@
         .alert {
             display: none;
         }
-        .warning-info {
-            background-color: #fff3cd;
-            border: 1px solid #ffecb5;
-            border-radius: 5px;
-            padding: 15px;
-            margin-bottom: 15px;
-            display: none;
-        }
     </style>
 </head>
 <body>
@@ -78,11 +70,6 @@
 
             <input type="radio" class="btn-check" name="loginType" id="typePhone" value="phone">
             <label class="btn btn-outline-primary" for="typePhone">手机登录</label>
-        </div>
-
-        <!-- 警告信息（用于封禁提示） -->
-        <div class="warning-info" id="warningInfo">
-            <span id="warningMessage"></span>
         </div>
 
         <!-- 错误提示 -->
@@ -176,16 +163,6 @@
             }
         }
 
-        // 显示警告信息（用于封禁提示）
-        function showWarning(message) {
-            $('#warningMessage').text(message);
-            $('#warningInfo').show();
-        }
-
-        function hideWarning() {
-            $('#warningInfo').hide();
-        }
-
         // 表单提交处理
         $('#loginForm').submit(function(e) {
             e.preventDefault();
@@ -198,7 +175,6 @@
             // 隐藏之前的提示
             $('#errorAlert').hide();
             $('#successAlert').hide();
-            hideWarning();
 
             // 获取表单数据
             const formData = {
@@ -237,7 +213,7 @@
 
             // 发送登录请求
             $.ajax({
-                url: 'api/login',
+                url: 'api/login', // 对应 LoginServlet 的 @WebServlet("/api/login")
                 type: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify(formData),
@@ -245,27 +221,14 @@
                 success: function(response) {
                     if (response.success) {
                         // 登录成功
-                        const message = '登录成功！正在跳转...';
+                        showSuccess('登录成功！正在跳转...');
 
-                        // 如果用户被封禁，添加警告提示
-                        if (response.data && response.data.status === 'banned') {
-                            showWarning('您的账号当前处于封禁状态，部分功能可能受限。');
-                            showSuccess('登录成功！账号处于封禁状态，部分功能受限。正在跳转...');
-                        } else {
-                            showSuccess(message);
-                        }
-
-                        // 保存用户信息到sessionStorage
+                        // 保存用户信息到sessionStorage（可选）
                         if (response.data) {
                             sessionStorage.setItem('user', JSON.stringify(response.data));
-
-                            // 如果是封禁状态，也保存封禁信息
-                            if (response.data.status === 'banned') {
-                                sessionStorage.setItem('user_banned', 'true');
-                            }
                         }
 
-                        // 2秒后跳转到首页
+                        // 3秒后跳转到首页
                         setTimeout(function() {
                             window.location.href = 'index.jsp';
                         }, 2000);
