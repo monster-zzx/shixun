@@ -152,6 +152,17 @@ public class BarService {
     }
 
     /**
+     * 根据关键词搜索已激活的贴吧（名称、简介或标签）
+     */
+    public List<Bar> searchActiveBars(String keyword) {
+        if (keyword == null) keyword = "";
+        try (SqlSession sqlSession = MybatisUtil.getSqlSession()) {
+            BarMapper mapper = sqlSession.getMapper(BarMapper.class);
+            return mapper.searchBarsByKeyword(keyword);
+        }
+    }
+
+    /**
      * 查询所有已激活的贴吧（用于发帖选择）
      */
     public List<Bar> getActiveBars() {

@@ -19,9 +19,9 @@
         </a>
 
         <!-- 居中搜索栏 -->
-        <form class="mx-auto w-50 position-relative">
+        <form class="mx-auto w-50 position-relative" action="search.jsp" method="get">
             <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
-            <input class="form-control ps-5 rounded-pill" type="search" placeholder="搜索贴吧/帖子" aria-label="Search">
+            <input class="form-control ps-5 rounded-pill" type="search" name="keyword" value="${param.keyword}" placeholder="搜索贴吧/帖子" aria-label="Search">
         </form>
 
         <!-- 右侧按钮 -->

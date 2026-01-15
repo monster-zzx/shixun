@@ -43,4 +43,7 @@ public interface BarMapper {
     // 用户退出贴吧（取消收藏）
     Boolean leaveBar(@Param("barId") Integer barId, @Param("userId") Integer userId);
 
+    // 关键字搜索（名称、简介或标签）
+    List<Bar> searchBarsByKeyword(@Param("keyword") String keyword);
+
 }

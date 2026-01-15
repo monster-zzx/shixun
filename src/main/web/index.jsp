@@ -502,6 +502,11 @@
                                             '</div>' +
                                         '</div>' +
                                         '<p class="bar-description">' + randomDesc + '</p>' +
+                                        '<div class="d-flex flex-wrap gap-1 mb-2">' +
+                                            (Array.isArray(bar.tags) && bar.tags.length
+                                                ? bar.tags.slice(0, 3).map(function(t){ return '<span class="badge bg-light text-dark border">#' + (t.name || '') + '</span>'; }).join('')
+                                                : '<span class="text-muted small">暂无标签</span>') +
+                                        '</div>' +
                                         '<div class="bar-meta">' +
                                             '<span class="text-muted">' + formatDate(bar.pubtime) + '</span>' +
                                         '</div>' +

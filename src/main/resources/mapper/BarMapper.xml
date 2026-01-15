@@ -77,4 +77,19 @@
         WHERE bar_id = #{barId} AND user_id = #{userId} AND role = 'MEMBER'
     </delete>
 
+    <!-- 搜索贴吧，按关键词匹配名称、简介或标签名称 -->
+    <select id="searchBarsByKeyword" resultType="com.bar.beans.Bar">
+        SELECT DISTINCT b.*
+        FROM bar b
+        LEFT JOIN bar_tag bt ON b.id = bt.bar_id
+        LEFT JOIN tag t ON bt.tag_id = t.id
+        WHERE b.status = 'ACTIVE'
+          AND (
+              b.name LIKE CONCAT('%', #{keyword}, '%')
+              OR b.description LIKE CONCAT('%', #{keyword}, '%')
+              OR t.name LIKE CONCAT('%', #{keyword}, '%')
+          )
+        ORDER BY b.pubtime DESC
+    </select>
+
 </mapper>

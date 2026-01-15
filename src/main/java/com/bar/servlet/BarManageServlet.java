@@ -62,6 +62,11 @@ public class BarManageServlet extends HttpServlet {
             } else {
                 bars = barService.getAllBars();
             }
+            // 填充每个贴吧的标签信息
+            com.bar.service.TagService tagService = new com.bar.service.TagService();
+            for (Bar b : bars) {
+                b.setTags(tagService.getTagsByBarId(b.getId()));
+            }
             out.write(JsonResponse.success("查询成功", bars));
         } catch (Exception e) {
             e.printStackTrace();
