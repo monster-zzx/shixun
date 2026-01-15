@@ -353,9 +353,18 @@
                             showSuccess('登录成功！正在跳转...');
                         }
 
-                        // 2秒后跳转到首页
+                        // 2秒后跳转到指定页面
                         setTimeout(function() {
-                            window.location.href = 'index.jsp';
+                            // 获取redirect参数
+                            const urlParams = new URLSearchParams(window.location.search);
+                            const redirectUrl = urlParams.get('redirect');
+                            
+                            // 如果有redirect参数，跳转到指定页面，否则跳转到首页
+                            if (redirectUrl) {
+                                window.location.href = decodeURIComponent(redirectUrl);
+                            } else {
+                                window.location.href = 'index.jsp';
+                            }
                         }, 2000);
                     } else {
                         // 登录失败

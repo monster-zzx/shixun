@@ -118,10 +118,20 @@ public class PostServlet extends HttpServlet {
         PrintWriter out = response.getWriter();
 
         try {
+            String postIdParam = request.getParameter("postId");
             String barIdParam = request.getParameter("barId");
             String userIdParam = request.getParameter("userId");
 
-            if (barIdParam != null && !barIdParam.isEmpty()) {
+            if (postIdParam != null && !postIdParam.isEmpty()) {
+                // 获取单个帖子详情
+                Integer postId = Integer.parseInt(postIdParam);
+                Post post = postService.getPostById(postId);
+                if (post != null) {
+                    out.write(JsonResponse.success("查询成功", post));
+                } else {
+                    out.write(JsonResponse.error("帖子不存在"));
+                }
+            } else if (barIdParam != null && !barIdParam.isEmpty()) {
                 Integer barId = Integer.parseInt(barIdParam);
                 List<Post> posts = postService.getPostsByBarId(barId);
                 out.write(JsonResponse.success("查询成功", posts));

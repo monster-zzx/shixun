@@ -258,6 +258,30 @@ public class DBTestServlet extends HttpServlet {
                 sqlSession.commit();
                 sqlSession.close();
 
+            } else if ("createCommentTable".equals(action)) {
+                // 创建comment表
+                SqlSession sqlSession = MybatisUtil.getSqlSession();
+                Connection conn = sqlSession.getConnection();
+                Statement stmt = conn.createStatement();
+
+                String sql = "CREATE TABLE IF NOT EXISTS comment (" +
+                        "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                        "post_id INT NOT NULL, " +
+                        "user_id INT NOT NULL, " +
+                        "content TEXT NOT NULL, " +
+                        "pubtime TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
+                        "FOREIGN KEY (post_id) REFERENCES post(id) ON DELETE CASCADE, " +
+                        "INDEX idx_post_id (post_id), " +
+                        "INDEX idx_user_id (user_id)" +
+                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+
+                stmt.execute(sql);
+
+                result.addProperty("success", true);
+                result.addProperty("message", "comment表创建成功");
+                sqlSession.commit();
+                sqlSession.close();
+
             } else if ("testQuery".equals(action)) {
                 // 测试SQL查询
                 String sql = params.get("sql") != null ? params.get("sql") :

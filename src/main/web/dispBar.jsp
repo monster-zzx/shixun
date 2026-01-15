@@ -429,7 +429,7 @@
 
         // 查看帖子详情
         function viewPost(postId) {
-            alert('查看帖子详情功能开发中，帖子ID: ' + postId);
+            window.location.href = 'dispPost.jsp?postId=' + postId;
         }
 
         // 检查登录状态

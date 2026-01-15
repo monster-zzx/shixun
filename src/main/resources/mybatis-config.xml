@@ -15,6 +15,7 @@
         <typeAlias type="com.bar.dto.LoginDTO" alias="LoginDTO"/>
         <typeAlias type="com.bar.dto.UserQueryDTO" alias="UserQueryDTO"/>
         <typeAlias type="com.bar.beans.Post" alias="Post"/>
+        <typeAlias type="com.bar.beans.Comment" alias="Comment"/>
     </typeAliases>
 
     <environments default="development">
@@ -34,5 +35,6 @@
         <mapper resource="mapper/BarMapper.xml"/>
         <mapper resource="mapper/TagMapper.xml"/>
         <mapper resource="mapper/PostMapper.xml"/>
+        <mapper resource="mapper/CommentMapper.xml"/>
     </mappers>
 </configuration>

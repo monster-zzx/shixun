@@ -94,6 +94,92 @@ public class PostService {
             return true;
         }
     }
+    
+    /**
+     * 增加帖子浏览量
+     */
+    public boolean incrementViewCount(Integer postId) {
+        try (SqlSession sqlSession = MybatisUtil.getSqlSession()) {
+            PostMapper mapper = sqlSession.getMapper(PostMapper.class);
+            Post post = mapper.selectById(postId);
+            if (post != null) {
+                post.setViewCount((post.getViewCount() == null ? 0 : post.getViewCount()) + 1);
+                boolean result = mapper.updatePost(post);
+                sqlSession.commit();
+                return result;
+            }
+            return false;
+        }
+    }
+    
+    /**
+     * 增加帖子评论数
+     */
+    public boolean incrementCommentCount(Integer postId) {
+        try (SqlSession sqlSession = MybatisUtil.getSqlSession()) {
+            PostMapper mapper = sqlSession.getMapper(PostMapper.class);
+            Post post = mapper.selectById(postId);
+            if (post != null) {
+                post.setCommentCount((post.getCommentCount() == null ? 0 : post.getCommentCount()) + 1);
+                boolean result = mapper.updatePost(post);
+                sqlSession.commit();
+                return result;
+            }
+            return false;
+        }
+    }
+    
+    /**
+     * 减少帖子评论数
+     */
+    public boolean decrementCommentCount(Integer postId) {
+        try (SqlSession sqlSession = MybatisUtil.getSqlSession()) {
+            PostMapper mapper = sqlSession.getMapper(PostMapper.class);
+            Post post = mapper.selectById(postId);
+            if (post != null && post.getCommentCount() != null && post.getCommentCount() > 0) {
+                post.setCommentCount(post.getCommentCount() - 1);
+                boolean result = mapper.updatePost(post);
+                sqlSession.commit();
+                return result;
+            }
+            return false;
+        }
+    }
+    
+    /**
+     * 增加帖子点赞数
+     */
+    public boolean incrementLikeCount(Integer postId) {
+        try (SqlSession sqlSession = MybatisUtil.getSqlSession()) {
+            PostMapper mapper = sqlSession.getMapper(PostMapper.class);
+            Post post = mapper.selectById(postId);
+            if (post != null) {
+                post.setLikeCount((post.getLikeCount() == null ? 0 : post.getLikeCount()) + 1);
+                boolean result = mapper.updatePost(post);
+                sqlSession.commit();
+                return result;
+            }
+            return false;
+        }
+    }
+    
+    /**
+     * 减少帖子点赞数
+     */
+    public boolean decrementLikeCount(Integer postId) {
+        try (SqlSession sqlSession = MybatisUtil.getSqlSession()) {
+            PostMapper mapper = sqlSession.getMapper(PostMapper.class);
+            Post post = mapper.selectById(postId);
+            if (post != null && post.getLikeCount() != null && post.getLikeCount() > 0) {
+                post.setLikeCount(post.getLikeCount() - 1);
+                boolean result = mapper.updatePost(post);
+                sqlSession.commit();
+                return result;
+            }
+            return false;
+        }
+    }
+
 
     public boolean updatePost(Integer id, String title, String content) throws Exception {
         if (title == null || title.trim().isEmpty()) {
