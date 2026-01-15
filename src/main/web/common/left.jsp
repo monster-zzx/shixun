@@ -38,44 +38,33 @@
                     <!-- 普通用户的收藏磁贴（管理员不显示） -->
                     <c:if test="${sessionScope.role != 'admin'}">
                         <h6 class="mt-4">收藏的贴吧</h6>
+                        <!-- 收藏磁贴 -->
+                        <h6 class="mt-4">收藏的贴吧</h6>
                         <div id="favTiles" class="row row-cols-2 g-2 mb-2">
-                            <div class="col"><div class="card text-center p-2 fav-tile">Java 贴吧</div></div>
-                            <div class="col"><div class="card text-center p-2 fav-tile">Python 贴吧</div></div>
-                            <div class="col"><div class="card text-center p-2 fav-tile">前端技术吧</div></div>
-                            <div class="col"><div class="card text-center p-2 fav-tile">算法刷题吧</div></div>
-                            <div class="col"><div class="card text-center p-2 fav-tile">电影交流吧</div></div>
-                            <div class="col"><div class="card text-center p-2 fav-tile">动漫研究所</div></div>
-                            <div class="col"><div class="card text-center p-2 fav-tile">足球迷吧</div></div>
-                            <div class="col"><div class="card text-center p-2 fav-tile">篮球吧</div></div>
-                            <div class="col"><div class="card text-center p-2 fav-tile">旅行分享吧</div></div>
-                            <div class="col"><div class="card text-center p-2 fav-tile">健身打卡吧</div></div>
+                            <!-- 加载状态 -->
+                            <div id="favLoading" class="col-12 text-center py-3">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                    <span class="visually-hidden">加载中...</span>
+                                </div>
+                                <small class="text-muted ms-2">加载中...</small>
+                            </div>
+                            <!-- 空状态 -->
+                            <div id="favEmpty" class="col-12 text-center py-3" style="display: none;">
+                                <i class="bi bi-star" style="font-size: 2rem; color: #ccc;"></i>
+                                <p class="text-muted small mb-0 mt-2">暂无收藏的贴吧</p>
+                            </div>
+                            <!-- 收藏列表将动态插入这里 -->
                         </div>
-                        <nav>
-                            <ul id="favPagination" class="pagination justify-content-center pagination-sm mb-0">
-                                <li class="page-item disabled" id="prevPage"><a class="page-link" href="#">&laquo;</a></li>
-                                <!-- page numbers 将插入这里 -->
-                                <li class="page-item" id="nextPage"><a class="page-link" href="#">&raquo;</a></li>
-                            </ul>
-                        </nav>
+<%--                        <nav>--%>
+<%--                            <ul id="favPagination" class="pagination justify-content-center pagination-sm mb-0">--%>
+<%--                                <li class="page-item disabled" id="prevPage"><a class="page-link" href="#">&laquo;</a></li>--%>
+<%--                                <!-- page numbers 将插入这里 -->--%>
+<%--                                <li class="page-item" id="nextPage"><a class="page-link" href="#">&raquo;</a></li>--%>
+<%--                            </ul>--%>
+<%--                        </nav>--%>
                     </c:if>
 
-                    <!-- 收藏磁贴 -->
-                    <h6 class="mt-4">收藏的贴吧</h6>
-                    <div id="favTiles" class="row row-cols-2 g-2 mb-2">
-                        <!-- 加载状态 -->
-                        <div id="favLoading" class="col-12 text-center py-3">
-                            <div class="spinner-border spinner-border-sm text-primary" role="status">
-                                <span class="visually-hidden">加载中...</span>
-                            </div>
-                            <small class="text-muted ms-2">加载中...</small>
-                        </div>
-                        <!-- 空状态 -->
-                        <div id="favEmpty" class="col-12 text-center py-3" style="display: none;">
-                            <i class="bi bi-star" style="font-size: 2rem; color: #ccc;"></i>
-                            <p class="text-muted small mb-0 mt-2">暂无收藏的贴吧</p>
-                        </div>
-                        <!-- 收藏列表将动态插入这里 -->
-                    </div>
+
                     <nav id="favPaginationNav" style="display: none;">
                         <ul id="favPagination" class="pagination justify-content-center pagination-sm mb-0">
                             <li class="page-item disabled" id="prevPage"><a class="page-link" href="#">&laquo;</a></li>
