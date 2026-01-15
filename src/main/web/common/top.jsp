@@ -46,7 +46,7 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li><a class="dropdown-item" href="User.jsp">个人中心</a></li>
-                            <li><a class="dropdown-item" href="settings.jsp">设置</a></li>
+                            <li><a class="dropdown-item" href="mangePost.jsp">帖子管理</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="Logout.jsp">退出登录</a></li>
                         </ul>

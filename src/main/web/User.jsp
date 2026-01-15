@@ -123,23 +123,7 @@
       </div>
 
       <!-- 个人中心导航 -->
-      <ul class="nav profile-nav mb-4">
-        <li class="nav-item">
-          <a class="nav-link active" href="#"><i class="bi bi-grid"></i> 动态</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#"><i class="bi bi-file-text"></i> 我的帖子</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#"><i class="bi bi-chat"></i> 我的回复</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#"><i class="bi bi-bookmark"></i> 我的收藏</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#"><i class="bi bi-award"></i> 我的成就</a>
-        </li>
-      </ul>
+    
 
       <div class="row">
         <!-- 最近动态 -->

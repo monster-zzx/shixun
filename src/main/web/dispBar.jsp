@@ -213,7 +213,7 @@
                                 <button class="btn btn-light btn-sm" onclick="loadPosts()">
                                     <i class="bi bi-arrow-clockwise"></i> 刷新
                                 </button>
-                                <button class="btn btn-light btn-sm ms-2" onclick="createPost()">
+                                <button id="createPostBtn" class="btn btn-light btn-sm ms-2" onclick="createPost()" style="display: none;">
                                     <i class="bi bi-plus-circle"></i> 发帖
                                 </button>
                             </div>
@@ -436,13 +436,43 @@
         function isLoggedIn() {
             // 这里可以根据实际情况判断，比如检查cookie或session
             // 简单示例：检查是否有用户信息在session中（需要在JSP中设置）
-            return ${not empty sessionScope.user};
+            <c:choose>
+            <c:when test="${not empty sessionScope.user}">
+            return true;
+            </c:when>
+            <c:otherwise>
+            return false;
+            </c:otherwise>
+            </c:choose>
         }
 
         // 获取当前登录用户ID
         function getCurrentUserId() {
             // 这里需要从session中获取当前用户ID
-            return ${not empty sessionScope.user ? sessionScope.user.id : 'null'};
+            <c:choose>
+            <c:when test="${not empty sessionScope.user}">
+            return ${sessionScope.user.id};
+            </c:when>
+            <c:otherwise>
+            return null;
+            </c:otherwise>
+            </c:choose>
+        }
+
+        // 获取当前用户状态
+        function getCurrentUserStatus() {
+            return '${sessionScope.userStatus}' || '';
+        }
+
+        // 检查用户是否被封禁
+        function isUserBanned() {
+            const status = getCurrentUserStatus();
+            return status === 'banned';
+        }
+
+        // 检查用户是否已登录且未被封禁
+        function canCreatePost() {
+            return isLoggedIn() && !isUserBanned();
         }
 
         // HTML 转义
@@ -513,6 +543,19 @@
 
         // 创建帖子
         function createPost() {
+            // 检查用户是否被封禁
+            if (isUserBanned()) {
+                alert('您的账号已被封禁，无法发帖。如有疑问，请联系管理员。');
+                return;
+            }
+
+            // 检查是否登录
+            if (!isLoggedIn()) {
+                alert('请先登录后再发帖');
+                window.location.href = 'Login.jsp';
+                return;
+            }
+
             const barId = getBarIdFromUrl();
             if (!barId) {
                 alert('缺少贴吧ID参数');
@@ -578,6 +621,11 @@
 
         // 切换收藏状态
         async function toggleFavorite() {
+            // 如果用户已被封禁，直接提示并阻止操作
+            if (isUserBanned()) {
+                alert('您的账号已被封禁，无法收藏。如有疑问，请联系管理员。');
+                return;
+            }
             const barId = getBarIdFromUrl();
             if (!barId) {
                 alert('缺少贴吧ID参数');
@@ -638,10 +686,23 @@
             }
         }
 
+        // 控制发帖按钮显示
+        function updateCreatePostButton() {
+            const createPostBtn = document.getElementById('createPostBtn');
+            if (createPostBtn) {
+                if (canCreatePost()) {
+                    createPostBtn.style.display = '';
+                } else {
+                    createPostBtn.style.display = 'none';
+                }
+            }
+        }
+
         // 页面加载时自动加载贴吧信息和帖子列表
         document.addEventListener('DOMContentLoaded', function() {
             loadBarInfo();
             loadPosts();
+            updateCreatePostButton();
         });
 
         // 顶栏按钮交互（如果存在）

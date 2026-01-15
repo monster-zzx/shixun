@@ -37,7 +37,7 @@
 
                     <!-- 普通用户的收藏磁贴（管理员不显示） -->
                     <c:if test="${sessionScope.role != 'admin'}">
-                        <h6 class="mt-4">收藏的贴吧</h6>
+                        
                         <!-- 收藏磁贴 -->
                         <h6 class="mt-4">收藏的贴吧</h6>
                         <div id="favTiles" class="row row-cols-2 g-2 mb-2">

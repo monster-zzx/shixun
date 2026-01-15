@@ -127,7 +127,7 @@
                 <i class="bi bi-person-x"></i>
                 <h4>请先登录</h4>
                 <p>登录后即可查看和管理您的帖子</p>
-                <a href="login.jsp" class="btn btn-primary">
+                <a href="Login.jsp" class="btn btn-primary">
                     <i class="bi bi-box-arrow-in-right"></i> 去登录
                 </a>
             </div>

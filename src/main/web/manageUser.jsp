@@ -19,6 +19,9 @@
 </head>
 <body>
 
+    <!-- 顶部导航 -->
+<jsp:include page="common/top.jsp"/>
+
 
 <!-- 检查是否为管理员 -->
 <c:if test="${sessionScope.role != 'admin'}">
