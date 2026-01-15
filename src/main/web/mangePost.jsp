@@ -4,14 +4,29 @@
 <%@ page import="com.bar.service.PostService" %>
 <%@ page import="com.bar.service.BarService" %>
 <%@ page import="com.bar.beans.Bar" %>
+<%@ page import="com.bar.beans.User" %>
 <%
     // 设置请求和响应编码
     request.setCharacterEncoding("UTF-8");
     response.setCharacterEncoding("UTF-8");
 
-    // 获取所有帖子
+    // 获取当前登录用户
+    User currentUser = (User) session.getAttribute("user");
+    Integer currentUserId = null;
+    String currentUsername = "未登录";
+    
+    if (currentUser != null) {
+        currentUserId = currentUser.getId();
+        currentUsername = currentUser.getUsername();
+    }
+
+    // 获取当前用户的帖子
     PostService postService = new PostService();
-    List<Post> allPosts = postService.getAllPosts();
+    List<Post> userPosts = null;
+    
+    if (currentUserId != null) {
+        userPosts = postService.getPostsByUserId(currentUserId);
+    }
 
     // 获取贴吧信息用于显示贴吧名称
     BarService barService = new BarService();
@@ -19,7 +34,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>所有帖子</title>
+    <title>我的帖子</title>
     <link rel="stylesheet" type="text/css" href="CSS/style.css">
     <link rel="stylesheet" type="text/css" href="CSS/bootstrap5.css">
     <!-- 引入 Bootstrap Icons 用于图标 -->
@@ -92,9 +107,13 @@
     <div class="p-4 w-75">
         <section class="mb-4">
             <div class="d-flex justify-content-between align-items-center">
-                <h2>所有帖子</h2>
+                <h2>我的帖子</h2>
                 <div class="d-flex align-items-center">
-                    <span class="me-2">共 <%= allPosts.size() %> 篇帖子</span>
+                    <% if (currentUserId != null) { %>
+                        <span class="me-2">共 <%= userPosts != null ? userPosts.size() : 0 %> 篇帖子</span>
+                    <% } else { %>
+                        <span class="me-2 text-muted">请先登录</span>
+                    <% } %>
                     <button class="btn btn-sm btn-outline-secondary" id="refreshBtn">
                         <i class="bi bi-arrow-clockwise"></i> 刷新
                     </button>
@@ -103,18 +122,27 @@
         </section>
 
         <section id="postsContainer">
-            <% if (allPosts.isEmpty()) { %>
+            <% if (currentUserId == null) { %>
+            <div class="empty-state">
+                <i class="bi bi-person-x"></i>
+                <h4>请先登录</h4>
+                <p>登录后即可查看和管理您的帖子</p>
+                <a href="login.jsp" class="btn btn-primary">
+                    <i class="bi bi-box-arrow-in-right"></i> 去登录
+                </a>
+            </div>
+            <% } else if (userPosts == null || userPosts.isEmpty()) { %>
             <div class="empty-state">
                 <i class="bi bi-file-text"></i>
                 <h4>暂无帖子</h4>
-                <p>还没有用户发布任何帖子，快去发一篇吧！</p>
-                <a href="Post.jsp" class="btn btn-primary">
+                <p>您还没有发布任何帖子，快去发一篇吧！</p>
+                <a href="Post.jsp?referrer=<%= java.net.URLEncoder.encode(request.getRequestURL().toString(), "UTF-8") %>" class="btn btn-primary">
                     <i class="bi bi-plus-circle"></i> 发布新帖子
                 </a>
             </div>
             <% } else { %>
             <div class="row">
-                <% for (Post post : allPosts) { 
+                <% for (Post post : userPosts) { 
                     // 获取帖子所属的贴吧信息
                     Bar bar = barService.getBarById(post.getBarId());
                 %>
@@ -140,7 +168,7 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <div class="post-meta">
                                     <i class="bi bi-person-circle"></i> 
-                                    用户ID: <%= post.getUserId() %> | 
+                                    <%= currentUsername %> | 
                                     <i class="bi bi-calendar3"></i> 
                                     <%= post.getPubtime() %>
                                 </div>
@@ -156,7 +184,7 @@
                                 <a href="dispPost.jsp?postId=<%= post.getId() %>" class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-eye"></i> 查看
                                 </a>
-                                <a href="Post.jsp?postId=<%= post.getId() %>" class="btn btn-sm btn-outline-secondary">
+                                <a href="Post.jsp?postId=<%= post.getId() %>&referrer=<%= java.net.URLEncoder.encode(request.getRequestURL().toString(), "UTF-8") %>" class="btn btn-sm btn-outline-secondary">
                                     <i class="bi bi-pencil"></i> 编辑
                                 </a>
                                 <button class="btn btn-sm btn-outline-danger delete-post" data-id="<%= post.getId() %>">
@@ -187,38 +215,133 @@
     
     // 删除帖子功能
     document.querySelectorAll('.delete-post').forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', async function() {
             const postId = this.getAttribute('data-id');
-            if (confirm('确定要删除这篇帖子吗？此操作不可恢复！')) {
-                deletePost(postId);
+            console.log('删除帖子ID:', postId); // 添加调试日志
+            const postCard = this.closest('.post-card');
+            
+            if (!postId) {
+                showToast('无法获取帖子ID', 'error');
+                return;
+            }
+            
+            if (!confirm('确定要删除这篇帖子吗？此操作不可恢复！')) {
+                return;
+            }
+            
+            // 禁用按钮，防止重复点击
+            this.disabled = true;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 删除中...';
+            
+            try {
+                console.log('发送删除请求，URL:', 'api/post/' + postId); // 添加调试日志
+                const response = await fetch('api/post/' + postId, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                console.log('响应状态:', response.status); // 添加调试日志
+                
+                if (!response.ok) {
+                    throw new Error('HTTP错误: ' + response.status);
+                }
+                
+                const data = await response.json();
+                console.log('响应数据:', data); // 添加调试日志
+                
+                if (data.success) {
+                    // 成功删除后，平滑移除帖子卡片
+                    postCard.style.transition = 'opacity 0.3s, transform 0.3s';
+                    postCard.style.opacity = '0';
+                    postCard.style.transform = 'translateX(20px)';
+                    
+                    setTimeout(() => {
+                        postCard.remove();
+                        
+                        // 检查是否还有帖子，如果没有则显示空状态
+                        const remainingPosts = document.querySelectorAll('.post-card');
+                        if (remainingPosts.length === 0) {
+                            const postsContainer = document.getElementById('postsContainer');
+                            postsContainer.innerHTML = `
+                                <div class="empty-state">
+                                    <i class="bi bi-file-text"></i>
+                                    <h4>暂无帖子</h4>
+                                    <p>您还没有发布任何帖子，快去发一篇吧！</p>
+                                    <a href="Post.jsp?referrer=<%= java.net.URLEncoder.encode(request.getRequestURL().toString(), "UTF-8") %>" class="btn btn-primary">
+                                        <i class="bi bi-plus-circle"></i> 发布新帖子
+                                    </a>
+                                </div>
+                            `;
+                            
+                            // 更新帖子计数
+                            const postCountElement = document.querySelector('.me-2');
+                            if (postCountElement) {
+                                postCountElement.textContent = '共 0 篇帖子';
+                            }
+                        } else {
+                            // 更新帖子计数
+                            const postCountElement = document.querySelector('.me-2');
+                            if (postCountElement) {
+                                postCountElement.textContent = `共 ${remainingPosts.length} 篇帖子`;
+                            }
+                        }
+                    }, 300);
+                    
+                    // 显示成功提示
+                    showToast('帖子删除成功', 'success');
+                } else {
+                    throw new Error(data.message || '删除失败');
+                }
+            } catch (error) {
+                console.error('删除帖子时出错:', error);
+                console.error('错误详情:', error.message); // 添加调试日志
+                showToast('删除失败: ' + error.message, 'error');
+                
+                // 恢复按钮状态
+                this.disabled = false;
+                this.innerHTML = '<i class="bi bi-trash"></i> 删除';
             }
         });
     });
     
-    function deletePost(postId) {
-        fetch(`api/post/${postId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('删除失败');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                alert('帖子删除成功！');
-                location.reload(); // 刷新页面
-            } else {
-                alert('删除失败：' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('删除帖子时出错:', error);
-            alert('删除帖子时发生错误，请稍后再试');
+    // 显示提示消息
+    function showToast(message, type) {
+        // 设置默认类型
+        type = type || 'info';
+        
+        // 创建toast容器（如果不存在）
+        let toastContainer = document.getElementById('toastContainer');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toastContainer';
+            toastContainer.className = 'position-fixed top-0 end-0 p-3';
+            toastContainer.style.zIndex = '1050';
+            document.body.appendChild(toastContainer);
+        }
+        
+        // 创建toast元素
+        const toastId = 'toast-' + Date.now();
+        const toastClass = type === 'success' ? 'success' : (type === 'error' ? 'danger' : 'primary');
+        
+        const toastHtml = '<div id="' + toastId + '" class="toast align-items-center text-white bg-' + toastClass + ' border-0" role="alert" aria-live="assertive" aria-atomic="true">' +
+            '<div class="d-flex">' +
+                '<div class="toast-body">' + message + '</div>' +
+                '<button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>' +
+            '</div>' +
+        '</div>';
+        
+        toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+        
+        // 显示toast
+        const toastElement = document.getElementById(toastId);
+        const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+        toast.show();
+        
+        // 自动移除
+        toastElement.addEventListener('hidden.bs.toast', function() {
+            toastElement.remove();
         });
     }
 </script>

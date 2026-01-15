@@ -349,36 +349,53 @@
         }
     }
 
-    // ============ 手动调试函数 ============
-    function manualDebug() {
-        console.log('=== 手动调试 ===');
 
-        console.log('1. 检查元素是否存在:');
-        console.log('- select元素:', document.getElementById('barId'));
-        console.log('- form元素:', document.getElementById('postForm'));
-
-        console.log('2. 检查网络请求:');
-
-        // 测试API端点
-        console.log('测试API端点:', API_BASE + '/bar/manage?status=active');
-        fetch(API_BASE + '/bar/manage?status=active')
-            .then(response => {
-                console.log(`  → 状态: ${response.status}`);
-                if (response.ok) {
-                    return response.json().then(data => {
-                        console.log(`  → 数据:`, data);
-                    });
-                }
-            })
-            .catch(error => {
-                console.log(`  → 错误: ${error.message}`);
-            });
-
-        console.log('3. 当前页面状态:');
-        console.log('- 完整URL:', window.location.href);
-        console.log('- 上下文路径:', CONTEXT_PATH);
-        console.log('- 查询参数:', window.location.search);
-        console.log('- barId参数:', getBarIdFromUrl());
+    // 获取来源页面信息
+    function getReferrerPage() {
+        // 优先使用URL参数中的referrer
+        const urlParams = new URLSearchParams(window.location.search);
+        const referrerParam = urlParams.get('referrer');
+        
+        if (referrerParam) {
+            return decodeURIComponent(referrerParam);
+        }
+        
+        // 其次使用document.referrer
+        if (document.referrer) {
+            return document.referrer;
+        }
+        
+        // 最后默认为首页
+        return CONTEXT_PATH + '/index.jsp';
+    }
+    
+    // 根据来源页面决定发帖后的跳转目标
+    function getRedirectTarget(barId) {
+        const referrer = getReferrerPage();
+        const barIdParam = getBarIdFromUrl();
+        
+        // 如果是从贴吧页面来的，返回原贴吧页面
+        if (barIdParam) {
+            return CONTEXT_PATH + '/dispBar.jsp?id=' + barIdParam;
+        }
+        
+        // 如果是从个人帖子管理页面来的，返回个人帖子管理页面
+        if (referrer.includes('mangePost.jsp')) {
+            return CONTEXT_PATH + '/mangePost.jsp';
+        }
+        
+        // 如果是从首页来的，返回首页
+        if (referrer.includes('index.jsp')) {
+            return CONTEXT_PATH + '/index.jsp';
+        }
+        
+        // 其他情况，跳转到刚发帖的贴吧页面
+        if (barId) {
+            return CONTEXT_PATH + '/dispBar.jsp?id=' + barId;
+        }
+        
+        // 最后默认返回首页
+        return CONTEXT_PATH + '/index.jsp';
     }
 
     // ============ 处理表单提交 ============
@@ -461,21 +478,15 @@
 
             if (data && data.success) {
                 showAlert('success', '帖子发布成功！');
-
-                // 如果是从贴吧页面跳转过来的，返回原页面
-                const barIdParam = getBarIdFromUrl();
-                if (barIdParam) {
-                    setTimeout(() => {
-                        window.location.href = CONTEXT_PATH + '/dispBar.jsp?id=' + barIdParam;
-                    }, 1500);
-                } else {
-                    // 否则重置表单
-                    setTimeout(() => {
-                        document.getElementById('postForm').reset();
-                        document.getElementById('titleCounter').textContent = '0/100';
-                        document.getElementById('contentCounter').textContent = '0/5000';
-                    }, 1000);
-                }
+                
+                // 获取跳转目标
+                const redirectTarget = getRedirectTarget(data.data ? data.data.barId : barId);
+                console.log('准备跳转到:', redirectTarget);
+                
+                // 延迟跳转，让用户看到成功提示
+                setTimeout(() => {
+                    window.location.href = redirectTarget;
+                }, 1500);
             } else {
                 throw new Error(data?.message || '发布失败');
             }
@@ -542,13 +553,6 @@
 
         console.log('=== 页面初始化完成 ===');
 
-        // 添加手动调试按钮（开发时使用）
-        const debugBtn = document.createElement('button');
-        debugBtn.className = 'btn btn-sm btn-outline-info position-fixed';
-        debugBtn.style.cssText = 'bottom: 20px; right: 20px; z-index: 1000;';
-        debugBtn.textContent = '调试';
-        debugBtn.onclick = manualDebug;
-        document.body.appendChild(debugBtn);
     });
 
     // ============ 公开调试函数 ============
@@ -568,7 +572,7 @@
         console.log('- 选项数量:', select.options.length);
         console.log('- 所有选项:', Array.from(select.options).map(opt => ({value: opt.value, text: opt.text})));
 
-        manualDebug();
+        
     };
 </script>
 </body>

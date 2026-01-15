@@ -26,6 +26,10 @@ public class PostServlet extends HttpServlet {
 
     @Override
     protected void service(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        // 设置请求和响应的字符编码
+        request.setCharacterEncoding("UTF-8");
+        response.setCharacterEncoding("UTF-8");
+        
         String method = request.getMethod();
         String pathInfo = request.getPathInfo();
         
@@ -97,8 +101,11 @@ public class PostServlet extends HttpServlet {
             }
             
         } catch (IllegalStateException e) {
+            System.err.println("删除帖子时发生业务异常: " + e.getMessage());
+            e.printStackTrace();
             out.write(JsonResponse.error(e.getMessage()));
         } catch (Exception e) {
+            System.err.println("删除帖子时发生系统异常: " + e.getMessage());
             e.printStackTrace();
             out.write(JsonResponse.error("系统错误：" + e.getMessage()));
         }

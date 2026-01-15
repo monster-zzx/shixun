@@ -46,6 +46,9 @@
         .post-item {
             transition: all 0.3s ease;
             cursor: pointer;
+            margin-bottom: 1rem;
+            border-radius: 0.375rem;
+            overflow: hidden;
         }
         
         .post-item:hover {
@@ -55,6 +58,41 @@
         
         .post-item .card-title a:hover {
             color: #667eea !important;
+        }
+        
+        .post-item .card-body {
+            padding: 1.25rem;
+        }
+        
+        .post-item .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+        
+        .post-item .card-text {
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+        
+        .post-item .post-meta {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.875rem;
+            color: #6c757d;
+        }
+        
+        .post-item .post-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            align-items: flex-end;
+        }
+        
+        .post-item .badge {
+            font-size: 0.75rem;
+            padding: 0.375rem 0.75rem;
         }
         
         /* 加载动画 */
@@ -324,7 +362,7 @@
             try {
                 container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">加载中...</span></div><p class="mt-3">正在加载帖子...</p></div>';
 
-                const resp = await fetch('api/post/create?barId=' + barId, {
+                const resp = await fetch('api/post?barId=' + barId, {
                     method: 'GET',
                     headers: { 'Content-Type': 'application/json;charset=UTF-8' }
                 });
@@ -354,15 +392,14 @@
                             html += '<div class="card-body">';
                             html += '<div class="d-flex justify-content-between align-items-start">';
                             html += '<div class="flex-grow-1">';
-                            html += '<h5 class="card-title mb-2"><a href="#" class="text-decoration-none text-dark" onclick="viewPost(' + post.id + ')">' + escapeHtml(post.title) + '</a></h5>';
-                            html += '<p class="card-text text-muted mb-2" style="max-height: 100px; overflow: hidden;">' + escapeHtml(post.content) + '</p>';
-                            html += '<div class="d-flex align-items-center gap-3 text-muted small">';
+                            html += '<h5 class="card-title"><a href="#" class="text-decoration-none text-dark" onclick="viewPost(' + post.id + ')">' + escapeHtml(post.title) + '</a></h5>';
+                            html += '<p class="card-text text-muted">' + escapeHtml(post.content) + '</p>';
+                            html += '<div class="post-meta">';
                             html += '<span><i class="bi bi-person"></i> 用户ID: ' + post.userId + '</span>';
                             html += '<span><i class="bi bi-clock"></i> ' + formatDateTime(post.pubtime) + '</span>';
                             html += '</div>';
                             html += '</div>';
-                            html += '<div class="text-end">';
-                            html += '<div class="d-flex flex-column gap-2">';
+                            html += '<div class="post-stats">';
                             html += '<span class="badge bg-light text-dark"><i class="bi bi-eye"></i> ' + (post.viewCount || 0) + '</span>';
                             html += '<span class="badge bg-light text-dark"><i class="bi bi-hand-thumbs-up"></i> ' + (post.likeCount || 0) + '</span>';
                             html += '<span class="badge bg-light text-dark"><i class="bi bi-chat"></i> ' + (post.commentCount || 0) + '</span>';
@@ -405,7 +442,6 @@
         // 获取当前登录用户ID
         function getCurrentUserId() {
             // 这里需要从session中获取当前用户ID
-            // 在实际应用中，可以通过隐藏字段或AJAX获取
             return ${not empty sessionScope.user ? sessionScope.user.id : 'null'};
         }
 
@@ -482,7 +518,9 @@
                 alert('缺少贴吧ID参数');
                 return;
             }
-            window.location.href = "Post.jsp?barId=" + barId;
+            // 添加当前页面作为referrer
+            const currentUrl = encodeURIComponent(window.location.href);
+            window.location.href = "Post.jsp?barId=" + barId + "&referrer=" + currentUrl;
         }
 
         // 加载收藏状态
