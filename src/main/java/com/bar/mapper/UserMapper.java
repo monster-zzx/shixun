@@ -54,7 +54,6 @@ public interface UserMapper {
     // 根据用户ID查询该用户加入的所有贴吧列表（通过bar_member表关联查询）
     List<Bar> selectBarsByUserId(Integer id);
 
-
     // ================ 新增的用户管理方法 ================
 
     // 13. 分页查询用户（支持搜索、状态过滤、角色过滤）
@@ -76,7 +75,6 @@ public interface UserMapper {
     void insertUnbanLog(@Param("userId") int userId,
                         @Param("adminId") int adminId,
                         @Param("unbanTime") Date unbanTime);
-
 
 
     // 19. 根据用户ID获取用户信息
@@ -115,7 +113,13 @@ public interface UserMapper {
                       @Param("updateTime") Date updateTime);
 
 
-
     // 30. 搜索用户（全文搜索）
     List<User> searchUsers(@Param("keyword") String keyword);
+
+    /**
+     * 31. 获取用户个人统计信息（帖子数、回复数、收藏数、浏览量）
+     * @param userId 用户ID
+     * @return 包含统计信息的Map，包含postCount、replyCount、viewCount、favoriteCount等字段
+     */
+    Map<String, Object> getUserProfileStatistics(@Param("userId") int userId);
 }

@@ -251,7 +251,7 @@
 <jsp:include page="common/top.jsp"/>
 
 <!-- 封禁提示（只有被封禁的用户才显示） -->
-<c:if test="${not empty sessionScope.user and sessionScope.userStatus == 'BANNED'}">
+<c:if test="${not empty sessionScope.user and (sessionScope.userStatus == 'banned' or sessionScope.userStatus == 'BANNED')}">
     <div class="alert alert-danger banned-alert d-flex justify-content-between align-items-center" role="alert">
         <div>
             <i class="bi bi-exclamation-triangle-fill me-2"></i>
@@ -293,12 +293,12 @@
                                 <i class="bi bi-arrow-clockwise"></i> 刷新
                             </button>
                             <!-- 封禁用户不能创建贴吧 -->
-                            <c:if test="${empty sessionScope.user or sessionScope.userStatus == 'BANNED' or sessionScope.userStatus == 'MUTED'}">
-                                <button class="btn btn-light btn-sm ms-2" disabled>
+                            <c:if test="${empty sessionScope.user or sessionScope.userStatus == 'banned' or sessionScope.userStatus == 'BANNED' or sessionScope.userStatus == 'MUTED'}">
+                                <button class="btn btn-light btn-sm ms-2" disabled title="您没有权限创建贴吧">
                                     <i class="bi bi-plus-circle"></i> 创建贴吧
                                 </button>
                             </c:if>
-                            <c:if test="${not empty sessionScope.user and sessionScope.userStatus != 'BANNED' and sessionScope.userStatus != 'MUTED'}">
+                            <c:if test="${not empty sessionScope.user and sessionScope.userStatus != 'banned' and sessionScope.userStatus != 'BANNED' and sessionScope.userStatus != 'MUTED'}">
                                 <a href="registerBar.jsp" class="btn btn-light btn-sm ms-2">
                                     <i class="bi bi-plus-circle"></i> 创建贴吧
                                 </a>
@@ -350,16 +350,24 @@
 <script>
     // 检查用户是否被封禁
     function isUserBanned() {
-        return ${not empty sessionScope.user and sessionScope.userStatus == 'BANNED'};
+        const userStatus = '${sessionScope.userStatus}';
+        const isBanned = userStatus === 'banned' || userStatus === 'BANNED';
+        console.log('检查封禁状态 - userStatus:', userStatus, 'isBanned:', isBanned);
+        return isBanned;
     }
 
     function isUserMuted() {
-        return ${not empty sessionScope.user and sessionScope.userStatus == 'MUTED'};
+        const userStatus = '${sessionScope.userStatus}';
+        const isMuted = userStatus === 'MUTED';
+        console.log('检查禁言状态 - userStatus:', userStatus, 'isMuted:', isMuted);
+        return isMuted;
     }
 
     // 被封禁用户的限制操作
     function restrictBannedUser() {
+        console.log('执行封禁用户限制检查');
         if (isUserBanned() || isUserMuted()) {
+            console.log('用户被封禁或禁言，应用限制');
             // 禁用创建贴吧按钮（已在前端HTML中处理）
             const createBarBtn = document.querySelector('a[href="registerBar.jsp"]');
             if (createBarBtn) {
@@ -371,11 +379,17 @@
 
             // 禁用刷新按钮的特定功能（如果需要）
             // 封禁用户只能浏览，不能刷新？这里保持浏览功能
+        } else {
+            console.log('用户未被封禁或禁言');
         }
     }
 
     // 页面加载时自动加载贴吧列表
     document.addEventListener('DOMContentLoaded', function() {
+        console.log('页面加载完成');
+        console.log('sessionScope.userStatus:', '${sessionScope.userStatus}');
+        console.log('sessionScope.user:', '${not empty sessionScope.user}');
+        
         loadBars();
 
         // 检查并限制被封禁用户
@@ -387,9 +401,10 @@
         }
 
         // 创建贴吧按钮点击事件
-        const createBarBtn = document.querySelector('a[href="RegisterBar.jsp"]');
+        const createBarBtn = document.querySelector('a[href="registerBar.jsp"]');
         if (createBarBtn) {
             createBarBtn.addEventListener('click', function(e) {
+                console.log('点击创建贴吧按钮');
                 // 检查是否登录
                 if (!isLoggedIn()) {
                     e.preventDefault();
@@ -401,14 +416,18 @@
                 if (isUserBanned() || isUserMuted()) {
                     e.preventDefault();
                     alert('您的账号已被限制，无法创建贴吧！');
+                    return false;
                 }
             });
+        } else {
+            console.log('创建贴吧按钮未找到（可能已被禁用）');
         }
     });
 
     // 检查登录状态
     function isLoggedIn() {
-        return ${not empty sessionScope.user};
+        const isLoggedIn = <c:choose><c:when test="${not empty sessionScope.user}">true</c:when><c:otherwise>false</c:otherwise></c:choose>;
+        return isLoggedIn;
     }
 
     // 原有的贴吧加载函数保持不变...

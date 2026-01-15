@@ -358,4 +358,45 @@ public class UserService {
             throw new RuntimeException("更新用户信息失败: " + e.getMessage(), e);
         }
     }
+
+    /**
+     * 获取用户个人信息和统计信息
+     */
+    public Map<String, Object> getUserProfile(Integer userId) {
+        if (userId == null) {
+            return null;
+        }
+        
+        try (SqlSession sqlSession = MybatisUtil.getSqlSession()) {
+            UserMapper mapper = sqlSession.getMapper(UserMapper.class);
+
+            Map<String, Object> result = new HashMap<>();
+
+            // 获取用户基本信息
+            User user = mapper.getUserById(userId);
+            if (user == null) {
+                return null;
+            }
+
+            result.put("user", user);
+
+            // 获取用户统计信息
+            Map<String, Object> statistics = mapper.getUserProfileStatistics(userId);
+            if (statistics != null) {
+                result.put("statistics", statistics);
+            } else {
+                // 如果没有统计数据，返回默认值
+                Map<String, Object> defaultStats = new HashMap<>();
+                defaultStats.put("postCount", 0);
+                defaultStats.put("replyCount", 0);
+                defaultStats.put("viewCount", 0);
+                defaultStats.put("favoriteCount", 0);
+                result.put("statistics", defaultStats);
+            }
+
+            return result;
+        } catch (Exception e) {
+            throw new RuntimeException("获取用户信息失败: " + e.getMessage(), e);
+        }
+    }
 }

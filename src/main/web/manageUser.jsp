@@ -6,6 +6,8 @@
     <title>用户管理</title>
     <link rel="stylesheet" type="text/css" href="CSS/bootstrap5.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <!-- 添加Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <style>
         .user-table th {
             background-color: #f8f9fa;
@@ -16,8 +18,7 @@
     </style>
 </head>
 <body>
-<!-- 顶部导航 -->
-<jsp:include page="common/top.jsp"/>
+
 
 <!-- 检查是否为管理员 -->
 <c:if test="${sessionScope.role != 'admin'}">
@@ -142,327 +143,452 @@
             </section>
         </div>
     </div>
-</c:if>
 
-<%@ include file="common/bottom.txt" %>
-
-<!-- 用户操作模态框 -->
-<div class="modal fade" id="userActionModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalTitle">用户操作</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div id="modalContent">
-                    <!-- 动态内容 -->
+    <!-- 用户操作模态框 -->
+    <div class="modal fade" id="userActionModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">用户操作</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                <button type="button" class="btn btn-primary" id="modalConfirmBtn">确认</button>
+                <div class="modal-body">
+                    <div id="modalContent">
+                        <!-- 动态内容 -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="modalConfirmBtn">确认</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-    // 用户管理相关变量
-    let currentPage = 1;
-    const pageSize = 10;
-    let totalUsers = 0;
-    let allUsers = [];
-    let filteredUsers = [];
+    <script>
+        // 获取应用程序的上下文路径
+        const contextPath = '<%= request.getContextPath() %>';
+        console.log('上下文路径:', contextPath);
 
-    // 获取当前登录的管理员ID
-    const currentAdminId = ${sessionScope.userId};
+        // 用户管理相关变量
+        let currentPage = 1;
+        const pageSize = 10;
+        let totalUsers = 0;
+        let allUsers = [];
+        const currentUserId = <c:choose><c:when test="${sessionScope.userId != null}">${sessionScope.userId}</c:when><c:otherwise>null</c:otherwise></c:choose>;
 
-    // 页面加载时初始化
-    document.addEventListener('DOMContentLoaded', function() {
-        loadUsers();
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('页面加载完成，上下文路径:', contextPath);
+            
+            // 检查元素是否存在（管理员权限检查）
+            const btnRefresh = document.getElementById('btnRefreshUsers');
+            const btnSearch = document.getElementById('btnSearch');
+            const searchInput = document.getElementById('searchUser');
+            const filterStatus = document.getElementById('filterStatus');
+            const filterRole = document.getElementById('filterRole');
+            
+            if (!btnRefresh || !btnSearch || !searchInput || !filterStatus || !filterRole) {
+                console.error('用户管理元素未找到，可能没有管理员权限');
+                return;
+            }
+            
+            loadUsers();
 
-        // 绑定事件
-        document.getElementById('btnRefreshUsers').addEventListener('click', loadUsers);
-        document.getElementById('btnSearch').addEventListener('click', filterUsers);
-        document.getElementById('searchUser').addEventListener('keyup', function(e) {
-            if (e.key === 'Enter') filterUsers();
-        });
-        document.getElementById('filterStatus').addEventListener('change', filterUsers);
-        document.getElementById('filterRole').addEventListener('change', filterUsers);
-    });
+            // 绑定事件
+            btnRefresh.addEventListener('click', function() {
+                console.log('点击刷新按钮');
+                currentPage = 1;
+                // 清空搜索和筛选条件
+                searchInput.value = '';
+                filterStatus.value = '';
+                filterRole.value = '';
+                loadUsers();
+            });
 
-    // 加载用户列表
-    async function loadUsers() {
-        const loadingRow = document.getElementById('loadingRow');
-        const tableBody = document.getElementById('userTableBody');
+            btnSearch.addEventListener('click', function() {
+                console.log('点击搜索按钮');
+                filterUsers();
+            });
 
-        loadingRow.style.display = 'table-row';
-        tableBody.innerHTML = '';
-
-        try {
-            // 构建查询参数
-            const params = new URLSearchParams();
-            params.append('page', currentPage);
-            params.append('size', pageSize);
-
-            const search = document.getElementById('searchUser').value;
-            const status = document.getElementById('filterStatus').value;
-            const role = document.getElementById('filterRole').value;
-
-            if (search) params.append('search', search);
-            if (status) params.append('status', status);
-            if (role) params.append('role', role);
-
-            // 调用API获取用户列表
-            const response = await fetch('api/user/manage?' + params.toString(), {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
+            searchInput.addEventListener('keyup', function(e) {
+                if (e.key === 'Enter') {
+                    console.log('按下回车搜索');
+                    filterUsers();
                 }
             });
 
-            if (!response.ok) {
-                throw new Error('网络响应错误: ' + response.status);
-            }
+            filterStatus.addEventListener('change', function() {
+                console.log('状态筛选改变:', filterStatus.value);
+                filterUsers();
+            });
+            
+            filterRole.addEventListener('change', function() {
+                console.log('角色筛选改变:', filterRole.value);
+                filterUsers();
+            });
+        });
 
-            const data = await response.json();
+        // 加载用户列表
+        async function loadUsers() {
+            console.log('开始加载用户，页码:', currentPage);
 
-            if (!data.success) {
-                throw new Error(data.message || '加载用户列表失败');
-            }
-
-            // 解析返回的数据
-            const result = data.data;
-            allUsers = result.users || [];
-            totalUsers = result.total || 0;
-
-            // 更新当前分页信息
-            currentPage = result.page || 1;
-
-            // 渲染表格和分页
-            renderUserTable();
-            renderPagination();
-
-        } catch (error) {
-            console.error('加载用户失败:', error);
-            tableBody.innerHTML = '<tr><td colspan="8" class="text-danger text-center">加载失败: ' + error.message + '</td></tr>';
-        } finally {
-            loadingRow.style.display = 'none';
-        }
-    }
-
-    // 过滤用户（现在直接调用API）
-    function filterUsers() {
-        currentPage = 1;
-        loadUsers();
-    }
-
-    // 渲染用户表格
-    function renderUserTable() {
-        const tableBody = document.getElementById('userTableBody');
-
-        if (allUsers.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">暂无符合条件的用户</td></tr>';
-            return;
-        }
-
-        let html = '';
-        allUsers.forEach(user => {
-            const statusClass = user.status === 'active' ? 'status-active' : 'status-banned';
-            const statusText = user.status === 'active' ? '正常' : '已封禁';
-
-            let actionButtons = '';
-            if (user.role !== 'admin') {
-                if (user.status !== 'banned') {
-                    actionButtons = '<button class="btn btn-danger btn-sm action-btn" onclick="showBanModal(' + user.id + ', \'' + user.username + '\')">封禁</button>';
-                } else {
-                    actionButtons = '<button class="btn btn-success btn-sm action-btn" onclick="unbanUser(' + user.id + ', \'' + user.username + '\')">解封</button>';
-                }
+            const tableBody = document.getElementById('userTableBody');
+            let loadingRow = document.getElementById('loadingRow');
+            
+            // 如果loadingRow不存在，创建一个临时的加载行
+            if (!loadingRow) {
+                loadingRow = document.createElement('tr');
+                loadingRow.id = 'loadingRow';
+                loadingRow.innerHTML = `
+                    <td colspan="8" class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">加载中...</span>
+                        </div>
+                        <p class="mt-2 text-muted">正在加载用户列表...</p>
+                    </td>`;
+                tableBody.appendChild(loadingRow);
             } else {
-                actionButtons = '<span class="text-muted">管理员</span>';
+                loadingRow.style.display = 'table-row';
             }
+            
+            // 清空表格内容，但保留loadingRow
+            const existingRows = tableBody.querySelectorAll('tr:not(#loadingRow)');
+            existingRows.forEach(row => row.remove());
 
-            const roleBadge = user.role === 'admin' ?
-                '<span class="badge bg-warning">管理员</span>' :
-                '<span class="badge bg-secondary">普通用户</span>';
+            try {
+                // 构建查询参数
+                const params = new URLSearchParams();
+                params.append('page', currentPage);
+                params.append('size', pageSize);
 
-            // 格式化日期
-            const createTime = formatDate(user.createTime);
-            const lastLoginTime = formatDate(user.lastLoginTime);
+                const search = document.getElementById('searchUser').value;
+                const status = document.getElementById('filterStatus').value;
+                const role = document.getElementById('filterRole').value;
 
-            html += '<tr>' +
-                '<td>' + user.id + '</td>' +
-                '<td>' + user.username + '</td>' +
-                '<td>' + (user.email || '-') + '</td>' +
-                '<td>' + roleBadge + '</td>' +
-                '<td class="' + statusClass + '">' + statusText + '</td>' +
-                '<td>' + createTime + '</td>' +
-                '<td>' + lastLoginTime + '</td>' +
-                '<td>' + actionButtons + '</td>' +
-                '</tr>';
-        });
+                if (search) {
+                    params.append('search', search);
+                    console.log('搜索关键词:', search);
+                }
+                if (status) {
+                    params.append('status', status);
+                    console.log('状态筛选:', status);
+                }
+                if (role) {
+                    params.append('role', role);
+                    console.log('角色筛选:', role);
+                }
 
-        tableBody.innerHTML = html;
-    }
+                // 使用正确的URL（添加上下文路径）
+                const apiUrl = contextPath + '/api/user/manage?' + params.toString();
+                console.log('请求完整URL:', apiUrl);
 
-    // 格式化日期
-    function formatDate(dateString) {
-        if (!dateString) return '-';
-        try {
-            const date = new Date(dateString);
-            return date.toLocaleString('zh-CN', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        } catch (e) {
-            return dateString;
-        }
-    }
+                // 调用API获取用户列表
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Cache-Control': 'no-cache'
+                    },
+                    credentials: 'same-origin'
+                });
 
-    // 渲染分页控件
-    function renderPagination() {
-        const pagination = document.getElementById('userPagination');
-        const totalPages = Math.ceil(totalUsers / pageSize);
+                console.log('响应状态:', response.status, response.statusText);
+                console.log('响应URL:', response.url);
 
-        if (totalPages <= 1) {
-            pagination.innerHTML = '';
-            return;
-        }
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('API错误响应:', errorText);
+                    throw new Error(`网络响应错误: ${response.status} ${response.statusText}`);
+                }
 
-        let html = '';
+                const data = await response.json();
+                console.log('API响应数据:', data);
 
-        // 上一页按钮
-        html += '<li class="page-item ' + (currentPage === 1 ? 'disabled' : '') + '">' +
-            '<a class="page-link" href="#" onclick="changePage(' + (currentPage - 1) + ')">&laquo;</a>' +
-            '</li>';
+                if (!data.success) {
+                    throw new Error(data.message || '加载用户列表失败');
+                }
 
-        // 页码按钮
-        for (let i = 1; i <= totalPages; i++) {
-            if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
-                html += '<li class="page-item ' + (currentPage === i ? 'active' : '') + '">' +
-                    '<a class="page-link" href="#" onclick="changePage(' + i + ')">' + i + '</a>' +
-                    '</li>';
-            } else if (i === currentPage - 3 || i === currentPage + 3) {
-                html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                // 解析返回的数据
+                const result = data.data;
+                allUsers = result.users || [];
+                totalUsers = result.total || 0;
+
+                // 更新当前分页信息
+                currentPage = result.page || 1;
+
+                console.log(`加载成功: ${allUsers.length}个用户，总计: ${totalUsers}`);
+
+                // 渲染表格和分页
+                renderUserTable();
+                renderPagination();
+
+            } catch (error) {
+                console.error('加载用户失败:', error);
+                // 移除loadingRow
+                if (loadingRow && loadingRow.parentNode) {
+                    loadingRow.remove();
+                }
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-danger text-center">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            加载失败: ${error.message}
+                            <br>
+                            <small class="text-muted">请检查控制台获取详细信息</small>
+                        </td>
+                    </tr>`;
+            } finally {
+                // 确保loadingRow被隐藏或移除（如果还存在的话）
+                // 注意：renderUserTable可能会清除loadingRow，所以需要检查
+                const stillExists = document.getElementById('loadingRow');
+                if (stillExists && stillExists.parentNode) {
+                    stillExists.style.display = 'none';
+                }
             }
         }
 
-        // 下一页按钮
-        html += '<li class="page-item ' + (currentPage === totalPages ? 'disabled' : '') + '">' +
-            '<a class="page-link" href="#" onclick="changePage(' + (currentPage + 1) + ')">&raquo;</a>' +
-            '</li>';
+        // 过滤用户（现在直接调用API）
+        function filterUsers() {
+            console.log('执行过滤，重置页码');
+            currentPage = 1;
+            loadUsers();
+        }
 
-        pagination.innerHTML = html;
-    }
+        // 渲染用户表格
+        function renderUserTable() {
+            const tableBody = document.getElementById('userTableBody');
 
-    // 切换页码
-    function changePage(page) {
-        currentPage = page;
-        loadUsers();
-    }
-
-    // 显示封禁模态框
-    function showBanModal(userId, username) {
-        document.getElementById('modalTitle').textContent = '封禁用户: ' + username;
-        document.getElementById('modalContent').innerHTML =
-            '<div class="mb-3">' +
-            '<label class="form-label">封禁原因:</label>' +
-            '<textarea id="banReason" class="form-control" rows="3" placeholder="请输入封禁原因..."></textarea>' +
-            '</div>' +
-            '<div class="alert alert-danger">' +
-            '<i class="bi bi-exclamation-triangle-fill me-2"></i>' +
-            '<strong>警告：</strong> 封禁后用户将无法登录和使用任何功能，只能浏览内容。' +
-            '</div>';
-
-        document.getElementById('modalConfirmBtn').onclick = function() {
-            const reason = document.getElementById('banReason').value;
-
-            if (!reason.trim()) {
-                alert('请填写封禁原因');
+            if (allUsers.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center text-muted">
+                            <i class="bi bi-people me-2"></i>
+                            暂无符合条件的用户
+                        </td>
+                    </tr>`;
                 return;
             }
 
-            // 调用API封禁用户
-            banUser(userId, reason);
-        };
+            let html = '';
+            allUsers.forEach(user => {
+                const statusClass = user.status === 'active' ? 'status-active' : 'status-banned';
+                const statusText = user.status === 'active' ? '正常' : '已封禁';
 
-        new bootstrap.Modal(document.getElementById('userActionModal')).show();
-    }
+                let actionButtons = '';
+                // 防止管理员封禁自己
+                const isCurrentUser = currentUserId !== null && user.id === currentUserId;
 
-    // 封禁用户
-    async function banUser(userId, reason) {
-        try {
-            const response = await fetch('api/user/ban', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    userId: userId,
-                    reason: reason
-                })
+                if (user.role !== 'admin' && !isCurrentUser) {
+                    if (user.status !== 'banned') {
+                        actionButtons = '<button class="btn btn-danger btn-sm action-btn" onclick="showBanModal(' + user.id + ', \'' + user.username + '\')">封禁</button>';
+                    } else {
+                        actionButtons = '<button class="btn btn-success btn-sm action-btn" onclick="unbanUser(' + user.id + ', \'' + user.username + '\')">解封</button>';
+                    }
+                } else if (isCurrentUser) {
+                    actionButtons = '<span class="text-muted">当前用户</span>';
+                } else {
+                    actionButtons = '<span class="text-muted">管理员</span>';
+                }
+
+                const roleBadge = user.role === 'admin' ?
+                    '<span class="badge bg-warning">管理员</span>' :
+                    '<span class="badge bg-secondary">普通用户</span>';
+
+                // 格式化日期
+                const createTime = formatDate(user.createTime);
+                const lastLoginTime = formatDate(user.lastLoginTime);
+
+                html += '<tr>' +
+                    '<td>' + user.id + '</td>' +
+                    '<td>' + user.username + '</td>' +
+                    '<td>' + (user.email || '-') + '</td>' +
+                    '<td>' + roleBadge + '</td>' +
+                    '<td class="' + statusClass + '">' + statusText + '</td>' +
+                    '<td>' + createTime + '</td>' +
+                    '<td>' + lastLoginTime + '</td>' +
+                    '<td>' + actionButtons + '</td>' +
+                    '</tr>';
             });
 
-            const data = await response.json();
+            tableBody.innerHTML = html;
+        }
 
-            if (data.success) {
-                alert('用户封禁成功');
-                // 关闭模态框
-                const modal = bootstrap.Modal.getInstance(document.getElementById('userActionModal'));
-                if (modal) modal.hide();
-                // 刷新用户列表
-                loadUsers();
-            } else {
-                alert('封禁失败: ' + data.message);
+        // 格式化日期
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleString('zh-CN', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch (e) {
+                return dateString;
             }
-        } catch (error) {
-            console.error('封禁用户失败:', error);
-            alert('封禁失败: ' + error.message);
-        }
-    }
-
-    // 解封用户
-    async function unbanUser(userId, username) {
-        if (!confirm('确定要解封 ' + username + ' 吗？')) {
-            return;
         }
 
-        try {
-            const response = await fetch('api/user/unban', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    userId: userId
-                })
-            });
+        // 渲染分页控件
+        function renderPagination() {
+            const pagination = document.getElementById('userPagination');
+            const totalPages = Math.ceil(totalUsers / pageSize);
 
-            const data = await response.json();
-
-            if (data.success) {
-                alert('用户解封成功');
-                // 刷新用户列表
-                loadUsers();
-            } else {
-                alert('解封失败: ' + data.message);
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
             }
-        } catch (error) {
-            console.error('解封用户失败:', error);
-            alert('解封失败: ' + error.message);
-        }
-    }
 
-    // 获取CSRF令牌（如果需要的话）
-    function getCsrfToken() {
-        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
-        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
-        return { token: csrfToken, header: csrfHeader };
-    }
-</script>
+            let html = '';
+
+            // 上一页按钮
+            html += '<li class="page-item ' + (currentPage === 1 ? 'disabled' : '') + '">' +
+                '<a class="page-link" href="#" onclick="changePage(' + (currentPage - 1) + '); return false;">&laquo;</a>' +
+                '</li>';
+
+            // 页码按钮
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                    html += '<li class="page-item ' + (currentPage === i ? 'active' : '') + '">' +
+                        '<a class="page-link" href="#" onclick="changePage(' + i + '); return false;">' + i + '</a>' +
+                        '</li>';
+                } else if (i === currentPage - 3 || i === currentPage + 3) {
+                    html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                }
+            }
+
+            // 下一页按钮
+            html += '<li class="page-item ' + (currentPage === totalPages ? 'disabled' : '') + '">' +
+                '<a class="page-link" href="#" onclick="changePage(' + (currentPage + 1) + '); return false;">&raquo;</a>' +
+                '</li>';
+
+            pagination.innerHTML = html;
+        }
+
+        // 切换页码
+        function changePage(page) {
+            console.log('切换页面到:', page);
+            currentPage = page;
+            loadUsers();
+            return false; // 阻止默认链接行为
+        }
+
+        // 显示封禁模态框
+        function showBanModal(userId, username) {
+            document.getElementById('modalTitle').textContent = '封禁用户: ' + username;
+            document.getElementById('modalContent').innerHTML =
+                '<div class="mb-3">' +
+                '<label class="form-label">封禁原因:</label>' +
+                '<textarea id="banReason" class="form-control" rows="3" placeholder="请输入封禁原因..." required></textarea>' +
+                '<div class="invalid-feedback">请填写封禁原因</div>' +
+                '</div>' +
+                '<div class="alert alert-danger">' +
+                '<i class="bi bi-exclamation-triangle-fill me-2"></i>' +
+                '<strong>警告：</strong> 封禁后用户将无法登录和使用任何功能，只能浏览内容。' +
+                '</div>';
+
+            document.getElementById('modalConfirmBtn').onclick = function() {
+                const reasonInput = document.getElementById('banReason');
+                const reason = reasonInput.value.trim();
+
+                if (!reason) {
+                    reasonInput.classList.add('is-invalid');
+                    return;
+                }
+
+                reasonInput.classList.remove('is-invalid');
+                banUser(userId, reason);
+            };
+
+            new bootstrap.Modal(document.getElementById('userActionModal')).show();
+        }
+
+        // 封禁用户
+        async function banUser(userId, reason) {
+            try {
+                console.log('封禁用户:', userId, '原因:', reason);
+
+                const apiUrl = contextPath + '/api/user/ban';
+                console.log('封禁API URL:', apiUrl);
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userId: userId,
+                        reason: reason
+                    }),
+                    credentials: 'same-origin'
+                });
+
+                console.log('封禁响应状态:', response.status);
+
+                const data = await response.json();
+                console.log('封禁响应数据:', data);
+
+                if (data.success) {
+                    alert('用户封禁成功');
+                    // 关闭模态框
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('userActionModal'));
+                    if (modal) modal.hide();
+                    // 刷新用户列表
+                    loadUsers();
+                } else {
+                    alert('封禁失败: ' + data.message);
+                }
+            } catch (error) {
+                console.error('封禁用户失败:', error);
+                alert('封禁失败: ' + error.message);
+            }
+        }
+
+        // 解封用户
+        async function unbanUser(userId, username) {
+            if (!confirm('确定要解封 ' + username + ' 吗？')) {
+                return;
+            }
+
+            try {
+                console.log('解封用户:', userId);
+
+                const apiUrl = contextPath + '/api/user/unban';
+                console.log('解封API URL:', apiUrl);
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userId: userId
+                    }),
+                    credentials: 'same-origin'
+                });
+
+                console.log('解封响应状态:', response.status);
+
+                const data = await response.json();
+                console.log('解封响应数据:', data);
+
+                if (data.success) {
+                    alert('用户解封成功');
+                    // 刷新用户列表
+                    loadUsers();
+                } else {
+                    alert('解封失败: ' + data.message);
+                }
+            } catch (error) {
+                console.error('解封用户失败:', error);
+                alert('解封失败: ' + error.message);
+            }
+        }
+    </script>
+</c:if>
+
+<%@ include file="common/bottom.txt" %>
 </body>
 </html>

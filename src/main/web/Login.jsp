@@ -60,6 +60,11 @@
             padding: 15px;
             margin-bottom: 15px;
             display: none;
+            color: #856404;
+            font-weight: 500;
+        }
+        .warning-info.show {
+            display: block !important;
         }
     </style>
 </head>
@@ -137,67 +142,121 @@
     </div>
 </div>
 
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-<!-- jQuery -->
+<!-- jQuery 必须在 Bootstrap 之前 -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Bootstrap JS (包含 Popper.js) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-    $(document).ready(function() {
+
+    $(function() {
         // 根据登录类型切换标签和提示
-        $('input[name="loginType"]').change(function() {
+        $('input[name="loginType"]').on('change', function() {
             const type = $(this).val();
             updateAccountLabel(type);
         });
 
         function updateAccountLabel(type) {
-            const accountLabel = $('#accountLabel');
-            const accountInput = $('#account');
-            const accountHelp = $('#accountHelp');
+            const $accountLabel = $('#accountLabel');
+            const $accountInput = $('#account');
+            const $accountHelp = $('#accountHelp');
 
             switch(type) {
                 case 'email':
-                    accountLabel.text('邮箱地址');
-                    accountInput.attr('placeholder', '请输入邮箱地址');
-                    accountInput.attr('type', 'email');
-                    accountHelp.text('请输入您的邮箱地址');
+                    $accountLabel.text('邮箱地址');
+                    $accountInput.attr('placeholder', '请输入邮箱地址');
+                    $accountInput.attr('type', 'email');
+                    $accountHelp.text('请输入您的邮箱地址');
                     break;
                 case 'phone':
-                    accountLabel.text('手机号码');
-                    accountInput.attr('placeholder', '请输入11位手机号码');
-                    accountInput.attr('type', 'tel');
-                    accountHelp.text('请输入您的11位手机号码');
+                    $accountLabel.text('手机号码');
+                    $accountInput.attr('placeholder', '请输入11位手机号码');
+                    $accountInput.attr('type', 'tel');
+                    $accountHelp.text('请输入您的11位手机号码');
                     break;
                 default:
-                    accountLabel.text('用户名');
-                    accountInput.attr('placeholder', '请输入用户名');
-                    accountInput.attr('type', 'text');
-                    accountHelp.text('请输入您的用户名');
+                    $accountLabel.text('用户名');
+                    $accountInput.attr('placeholder', '请输入用户名');
+                    $accountInput.attr('type', 'text');
+                    $accountHelp.text('请输入您的用户名');
             }
         }
 
         // 显示警告信息（用于封禁提示）
         function showWarning(message) {
-            $('#warningMessage').text(message);
-            $('#warningInfo').show();
+            console.log('showWarning 被调用，消息:', message);
+            const $warningInfo = $('#warningInfo');
+            const $warningMessage = $('#warningMessage');
+            
+            if ($warningInfo.length === 0) {
+                console.error('警告信息元素未找到');
+                return;
+            }
+            
+            if ($warningMessage.length === 0) {
+                console.error('警告消息元素未找到');
+                return;
+            }
+            
+            $warningMessage.text(message);
+            // 使用多种方式确保显示
+            $warningInfo.css('display', 'block')
+                       .addClass('show')
+                       .show()
+                       .removeClass('d-none'); // 移除可能的 Bootstrap 隐藏类
+            console.log('警告信息已显示，元素可见性:', $warningInfo.is(':visible'));
+            console.log('警告信息元素:', $warningInfo[0]);
         }
 
         function hideWarning() {
-            $('#warningInfo').hide();
+            $('#warningInfo').css('display', 'none')
+                            .removeClass('show')
+                            .hide();
+        }
+
+        // 显示错误信息
+        function showError(message) {
+            $('#errorMessage').text(message);
+            $('#errorAlert').show();
+        }
+
+        function hideError() {
+            $('#errorAlert').hide();
+        }
+
+        // 显示成功信息
+        function showSuccess(message) {
+            $('#successMessage').text(message);
+            $('#successAlert').show();
+        }
+
+        function hideSuccess() {
+            $('#successAlert').hide();
+        }
+
+        // 重置按钮状态
+        function resetButton() {
+            $('#loginBtn').prop('disabled', false);
+            $('#loginText').show();
+            $('#loadingSpinner').hide();
         }
 
         // 表单提交处理
-        $('#loginForm').submit(function(e) {
+        $('#loginForm').on('submit', function(e) {
             e.preventDefault();
 
             // 显示加载状态
-            $('#loginBtn').prop('disabled', true);
-            $('#loginText').hide();
-            $('#loadingSpinner').show();
+            const $loginBtn = $('#loginBtn');
+            const $loginText = $('#loginText');
+            const $loadingSpinner = $('#loadingSpinner');
+
+            $loginBtn.prop('disabled', true);
+            $loginText.hide();
+            $loadingSpinner.show();
 
             // 隐藏之前的提示
-            $('#errorAlert').hide();
-            $('#successAlert').hide();
+            hideError();
+            hideSuccess();
             hideWarning();
 
             // 获取表单数据
@@ -205,34 +264,39 @@
                 account: $('#account').val().trim(),
                 password: $('#password').val().trim(),
                 loginType: $('input[name="loginType"]:checked').val(),
-                rememberMe: $('#rememberMe').is(':checked') ? 'true' : 'false',
-                captcha: '' // 如果需要验证码可以添加
+                rememberMe: $('#rememberMe').is(':checked'),
+                captcha: ''
             };
 
             // 验证输入
             if (!formData.account) {
                 showError('请输入账号');
                 resetButton();
-                return;
+                return false;
             }
 
             if (!formData.password) {
                 showError('请输入密码');
                 resetButton();
-                return;
+                return false;
             }
 
             // 特殊验证
-            if (formData.loginType === 'phone' && !/^\d{11}$/.test(formData.account)) {
-                showError('请输入有效的11位手机号码');
-                resetButton();
-                return;
+            if (formData.loginType === 'phone') {
+                if (!/^\d{11}$/.test(formData.account)) {
+                    showError('请输入有效的11位手机号码');
+                    resetButton();
+                    return false;
+                }
             }
 
-            if (formData.loginType === 'email' && !/^\S+@\S+\.\S+$/.test(formData.account)) {
-                showError('请输入有效的邮箱地址');
-                resetButton();
-                return;
+            if (formData.loginType === 'email') {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(formData.account)) {
+                    showError('请输入有效的邮箱地址');
+                    resetButton();
+                    return false;
+                }
             }
 
             // 发送登录请求
@@ -243,26 +307,50 @@
                 data: JSON.stringify(formData),
                 dataType: 'json',
                 success: function(response) {
-                    if (response.success) {
+                    console.log('登录响应数据:', response);
+                    
+                    if (response && response.success) {
                         // 登录成功
-                        const message = '登录成功！正在跳转...';
-
                         // 如果用户被封禁，添加警告提示
-                        if (response.data && response.data.status === 'banned') {
-                            showWarning('您的账号当前处于封禁状态，部分功能可能受限。');
-                            showSuccess('登录成功！账号处于封禁状态，部分功能受限。正在跳转...');
-                        } else {
-                            showSuccess(message);
-                        }
-
-                        // 保存用户信息到sessionStorage
                         if (response.data) {
+                            console.log('用户数据:', response.data);
+                            console.log('用户状态字段:', response.data.status);
+                            
+                            // 检查封禁状态的多种可能字段
+                            const isBanned = response.data.status === 'banned' ||
+                                response.data.status === 'BANNED' ||
+                                response.data.banned === true ||
+                                response.data.isBanned === true ||
+                                response.data.userStatus === 'banned';
+                            
+                            console.log('是否被封禁:', isBanned);
+
+                            // 保存用户信息到sessionStorage
                             sessionStorage.setItem('user', JSON.stringify(response.data));
 
-                            // 如果是封禁状态，也保存封禁信息
-                            if (response.data.status === 'banned') {
+                            if (isBanned) {
                                 sessionStorage.setItem('user_banned', 'true');
+
+                                // 显示封禁警告
+                                let banMessage = '您的账号当前处于封禁状态，部分功能可能受限。';
+                                if (response.data.banReason) {
+                                    banMessage += ' 原因：' + response.data.banReason;
+                                }
+                                if (response.data.banUntil) {
+                                    const banDate = new Date(response.data.banUntil);
+                                    banMessage += ' 解封时间：' + banDate.toLocaleDateString();
+                                }
+
+                                console.log('显示封禁警告:', banMessage);
+                                showWarning(banMessage);
+                                showSuccess('登录成功！账号处于封禁状态，部分功能受限。正在跳转...');
+                            } else {
+                                sessionStorage.removeItem('user_banned');
+                                showSuccess('登录成功！正在跳转...');
                             }
+                        } else {
+                            console.log('响应中没有用户数据');
+                            showSuccess('登录成功！正在跳转...');
                         }
 
                         // 2秒后跳转到首页
@@ -271,7 +359,26 @@
                         }, 2000);
                     } else {
                         // 登录失败
-                        showError(response.message || '登录失败');
+                        const errorMsg = response && response.message ? response.message : '登录失败';
+
+                        // 检查是否为封禁相关错误
+                        if (response && (response.code === 'USER_BANNED' ||
+                            (response.message && response.message.includes('封禁')))) {
+                            let banMessage = '账号已被封禁，无法登录';
+                            if (response.data) {
+                                if (response.data.banReason) {
+                                    banMessage += '，原因：' + response.data.banReason;
+                                }
+                                if (response.data.banUntil) {
+                                    const banDate = new Date(response.data.banUntil);
+                                    banMessage += '，解封时间：' + banDate.toLocaleDateString();
+                                }
+                            }
+                            showError(banMessage);
+                        } else {
+                            showError(errorMsg);
+                        }
+
                         resetButton();
                     }
                 },
@@ -283,55 +390,87 @@
                     console.error("响应文本:", xhr.responseText);
                     console.error("请求URL:", xhr.responseURL);
 
-                    let errorMsg = '登录请求失败';
+                    let errorMsg = '登录请求失败，请稍后重试';
+
+                    if (xhr.status === 403) {
+                        // 权限拒绝，可能是被封禁
+                        try {
+                            const errorResponse = JSON.parse(xhr.responseText);
+                            if (errorResponse.code === 'USER_BANNED' ||
+                                (errorResponse.message && errorResponse.message.includes('封禁'))) {
+                                let banMessage = '账号已被封禁，无法登录';
+                                if (errorResponse.data) {
+                                    if (errorResponse.data.banReason) {
+                                        banMessage += '，原因：' + errorResponse.data.banReason;
+                                    }
+                                    if (errorResponse.data.banUntil) {
+                                        const banDate = new Date(errorResponse.data.banUntil);
+                                        banMessage += '，解封时间：' + banDate.toLocaleDateString();
+                                    }
+                                }
+                                showError(banMessage);
+                                resetButton();
+                                return;
+                            }
+                        } catch (e) {
+                            // 忽略解析错误
+                        }
+                    }
+
                     if (xhr.responseText) {
                         try {
-                            // 尝试解析JSON错误响应
                             const errorResponse = JSON.parse(xhr.responseText);
                             errorMsg = errorResponse.message || errorMsg;
                         } catch (e) {
-                            // 如果不是JSON，直接显示响应文本
                             if (xhr.responseText.length < 100) {
                                 errorMsg = xhr.responseText;
                             }
                         }
                     }
+
                     showError(errorMsg);
                     resetButton();
                 }
             });
+
+            return false;
         });
-
-        function showError(message) {
-            $('#errorMessage').text(message);
-            $('#errorAlert').show();
-        }
-
-        function showSuccess(message) {
-            $('#successMessage').text(message);
-            $('#successAlert').show();
-        }
-
-        function resetButton() {
-            $('#loginBtn').prop('disabled', false);
-            $('#loginText').show();
-            $('#loadingSpinner').hide();
-        }
 
         // 自动判断登录类型
         $('#account').on('input', function() {
             const value = $(this).val();
-            if (value.includes('@') && !$('#typeEmail').is(':checked')) {
-                $('#typeEmail').prop('checked', true).trigger('change');
-            } else if (/^\d{11}$/.test(value) && !$('#typePhone').is(':checked')) {
-                $('#typePhone').prop('checked', true).trigger('change');
-            } else if (!value.includes('@') && !/^\d{11}$/.test(value) && !$('#typeUsername').is(':checked')) {
-                $('#typeUsername').prop('checked', true).trigger('change');
+            const $typeEmail = $('#typeEmail');
+            const $typePhone = $('#typePhone');
+            const $typeUsername = $('#typeUsername');
+
+            if (value.includes('@') && !$typeEmail.prop('checked')) {
+                $typeEmail.prop('checked', true).trigger('change');
+            } else if (/^\d{11}$/.test(value) && !$typePhone.prop('checked')) {
+                $typePhone.prop('checked', true).trigger('change');
+            } else if (!value.includes('@') && !/^\d{11}$/.test(value) && !$typeUsername.prop('checked')) {
+                $typeUsername.prop('checked', true).trigger('change');
             }
+        });
+
+        // 处理 alert 关闭按钮
+        $('.alert .btn-close').on('click', function() {
+            $(this).closest('.alert').hide();
         });
 
         // 初始更新标签
         updateAccountLabel($('input[name="loginType"]:checked').val());
+
+        // 页面加载时检查是否有错误信息需要显示（从其他页面传递过来）
+        const urlParams = new URLSearchParams(window.location.search);
+        const error = urlParams.get('error');
+        if (error) {
+            showError(decodeURIComponent(error));
+        }
+
+        const message = urlParams.get('message');
+        if (message) {
+            showSuccess(decodeURIComponent(message));
+        }
     });
 </script>
 </body>

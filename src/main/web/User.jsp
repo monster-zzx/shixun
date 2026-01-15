@@ -79,16 +79,16 @@
                class="avatar-lg rounded-circle me-4"
                alt="用户头像">
           <div class="flex-grow-1">
-            <h1 class="h2 mb-2">张伟 <span class="badge badge-points px-3 py-2 ms-2"><i class="bi bi-trophy"></i> 黄金会员</span></h1>
-            <p class="mb-1"><i class="bi bi-geo-alt me-2"></i>北京 · 海淀区</p>
-            <p class="mb-3"><i class="bi bi-quote me-2"></i>热爱分享，乐于助人</p>
+            <h1 class="h2 mb-2" id="userName">加载中... <span class="badge badge-points px-3 py-2 ms-2" id="userRoleBadge"><i class="bi bi-trophy"></i> 普通用户</span></h1>
+            <p class="mb-1" id="userLocation" style="display: none;"><i class="bi bi-geo-alt me-2"></i><span id="locationText"></span></p>
+            <p class="mb-3" id="userResume"><i class="bi bi-quote me-2"></i><span id="resumeText">暂无简介</span></p>
             <div class="d-flex">
-              <button class="btn btn-light btn-sm me-2"><i class="bi bi-pencil"></i> 编辑资料</button>
+              <a href="informationManagee.jsp" class="btn btn-light btn-sm me-2"><i class="bi bi-pencil"></i> 编辑资料</a>
               <button class="btn btn-outline-light btn-sm"><i class="bi bi-gear"></i> 账户设置</button>
             </div>
           </div>
           <div class="text-end">
-            <div class="display-6 mb-0">1,248</div>
+            <div class="display-6 mb-0" id="userPoints">0</div>
             <small>积分</small>
           </div>
         </div>
@@ -98,25 +98,25 @@
       <div class="row mb-4">
         <div class="col-md-3 mb-3">
           <div class="stats-card text-center">
-            <div class="stats-number">42</div>
+            <div class="stats-number" id="postCount">0</div>
             <div class="stats-label"><i class="bi bi-file-text"></i> 我的帖子</div>
           </div>
         </div>
         <div class="col-md-3 mb-3">
           <div class="stats-card text-center">
-            <div class="stats-number">128</div>
+            <div class="stats-number" id="replyCount">0</div>
             <div class="stats-label"><i class="bi bi-chat-dots"></i> 我的回复</div>
           </div>
         </div>
         <div class="col-md-3 mb-3">
           <div class="stats-card text-center">
-            <div class="stats-number">36</div>
+            <div class="stats-number" id="favoriteCount">0</div>
             <div class="stats-label"><i class="bi bi-bookmark"></i> 收藏内容</div>
           </div>
         </div>
         <div class="col-md-3 mb-3">
           <div class="stats-card text-center">
-            <div class="stats-number">2,417</div>
+            <div class="stats-number" id="viewCount">0</div>
             <div class="stats-label"><i class="bi bi-eye"></i> 被浏览</div>
           </div>
         </div>
@@ -211,11 +211,11 @@
             </div>
             <div class="card-body">
               <ul class="list-unstyled mb-0">
-                <li class="mb-2"><i class="bi bi-envelope me-2"></i> zhangwei@example.com</li>
-                <li class="mb-2"><i class="bi bi-calendar me-2"></i> 注册于 2023年8月15日</li>
-                <li class="mb-2"><i class="bi bi-clock-history me-2"></i> 最后登录：今天 09:30</li>
-                <li class="mb-2"><i class="bi bi-gender-ambiguous me-2"></i> 男</li>
-                <li><i class="bi bi-link-45deg me-2"></i> <a href="#">个人网站</a></li>
+                <li class="mb-2"><i class="bi bi-envelope me-2"></i> <span id="userEmail">加载中...</span></li>
+                <li class="mb-2"><i class="bi bi-calendar me-2"></i> 注册于 <span id="createTime">加载中...</span></li>
+                <li class="mb-2"><i class="bi bi-clock-history me-2"></i> 最后登录：<span id="lastLoginTime">加载中...</span></li>
+                <li class="mb-2" id="userGenderItem" style="display: none;"><i class="bi bi-gender-ambiguous me-2"></i> <span id="userGender"></span></li>
+                <li class="mb-2"><i class="bi bi-phone me-2"></i> <span id="userPhone">未设置</span></li>
               </ul>
             </div>
           </div>
@@ -259,6 +259,171 @@
 <%@ include file="common/bottom.txt" %>
 
 <script>
+  // 获取应用程序的上下文路径
+  const contextPath = '<%= request.getContextPath() %>';
+
+  // 加载用户个人信息和统计
+  async function loadUserProfile() {
+    try {
+      const response = await fetch(contextPath + '/api/user/profile', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'same-origin'
+      });
+
+      if (!response.ok) {
+        throw new Error('获取用户信息失败');
+      }
+
+      const result = await response.json();
+      
+      if (!result.success) {
+        console.error('获取用户信息失败:', result.message);
+        return;
+      }
+
+      const data = result.data;
+      const user = data.user;
+      const statistics = data.statistics;
+
+      // 更新用户基本信息
+      if (user) {
+        // 用户名
+        const userNameEl = document.getElementById('userName');
+        if (userNameEl) {
+          userNameEl.innerHTML = user.username + ' <span class="badge badge-points px-3 py-2 ms-2" id="userRoleBadge"><i class="bi bi-trophy"></i> ' + 
+            (user.role === 'admin' ? '管理员' : '普通用户') + '</span>';
+        }
+
+        // 邮箱
+        const userEmailEl = document.getElementById('userEmail');
+        if (userEmailEl) {
+          userEmailEl.textContent = user.email || '未设置';
+        }
+
+        // 注册时间
+        const createTimeEl = document.getElementById('createTime');
+        if (createTimeEl && user.createTime) {
+          const createDate = new Date(user.createTime);
+          createTimeEl.textContent = createDate.toLocaleDateString('zh-CN', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          });
+        }
+
+        // 最后登录时间
+        const lastLoginTimeEl = document.getElementById('lastLoginTime');
+        if (lastLoginTimeEl) {
+          if (user.lastLoginTime) {
+            const lastLoginDate = new Date(user.lastLoginTime);
+            const now = new Date();
+            const diff = now - lastLoginDate;
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            
+            if (hours < 1) {
+              lastLoginTimeEl.textContent = '刚刚';
+            } else if (hours < 24) {
+              lastLoginTimeEl.textContent = hours + '小时前';
+            } else if (hours < 48) {
+              lastLoginTimeEl.textContent = '昨天 ' + lastLoginDate.toLocaleTimeString('zh-CN', {
+                hour: '2-digit',
+                minute: '2-digit'
+              });
+            } else {
+              lastLoginTimeEl.textContent = lastLoginDate.toLocaleString('zh-CN', {
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              });
+            }
+          } else {
+            lastLoginTimeEl.textContent = '从未登录';
+          }
+        }
+
+        // 性别
+        if (user.gender) {
+          const userGenderItem = document.getElementById('userGenderItem');
+          const userGender = document.getElementById('userGender');
+          if (userGenderItem && userGender) {
+            // 性别显示映射函数
+            function getGenderDisplay(gender) {
+              const genderMap = {
+                'male': '男',
+                'female': '女',
+                'other': '其他',
+                '男': '男',  // 兼容旧数据
+                '女': '女',  // 兼容旧数据
+                '其他': '其他'  // 兼容旧数据
+              };
+              return genderMap[gender] || gender;
+            }
+            userGender.textContent = getGenderDisplay(user.gender);
+            userGenderItem.style.display = 'list-item';
+          }
+        }
+
+        // 手机号
+        const userPhoneEl = document.getElementById('userPhone');
+        if (userPhoneEl) {
+          userPhoneEl.textContent = user.phone || '未设置';
+        }
+
+        // 简介
+        const resumeTextEl = document.getElementById('resumeText');
+        if (resumeTextEl) {
+          resumeTextEl.textContent = user.resume || '暂无简介';
+        }
+
+        // 积分（使用登录次数作为积分）
+        const userPointsEl = document.getElementById('userPoints');
+        if (userPointsEl) {
+          userPointsEl.textContent = (user.loginCount || 0).toLocaleString();
+        }
+      }
+
+      // 更新统计数据
+      if (statistics) {
+        const postCountEl = document.getElementById('postCount');
+        if (postCountEl) {
+          postCountEl.textContent = (statistics.postCount || 0).toLocaleString();
+        }
+
+        const replyCountEl = document.getElementById('replyCount');
+        if (replyCountEl) {
+          replyCountEl.textContent = (statistics.replyCount || 0).toLocaleString();
+        }
+
+        const favoriteCountEl = document.getElementById('favoriteCount');
+        if (favoriteCountEl) {
+          favoriteCountEl.textContent = (statistics.favoriteCount || 0).toLocaleString();
+        }
+
+        const viewCountEl = document.getElementById('viewCount');
+        if (viewCountEl) {
+          viewCountEl.textContent = (statistics.viewCount || 0).toLocaleString();
+        }
+      }
+
+    } catch (error) {
+      console.error('加载用户信息失败:', error);
+      // 显示错误信息
+      const userNameEl = document.getElementById('userName');
+      if (userNameEl) {
+        userNameEl.textContent = '加载失败';
+      }
+    }
+  }
+
+  // 页面加载时获取用户信息
+  document.addEventListener('DOMContentLoaded', function() {
+    loadUserProfile();
+  });
+
   // 顶栏按钮交互
   if (document.getElementById('btnNotify')) {
     document.getElementById('btnNotify').addEventListener('click', function() {

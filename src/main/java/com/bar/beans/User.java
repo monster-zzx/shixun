@@ -31,6 +31,9 @@ public class User implements java.io.Serializable {
     public Integer getId(){
         return this.id;
     }
+    public void setId(Integer id) {
+        this.id = id;
+    }
     public String getGender() {
         return gender;
     }
