@@ -8,6 +8,7 @@ public class Post {
     private String content;
     private Integer userId;
     private Integer barId;
+    private String barname;
     private Integer viewCount;
     private Integer likeCount;
     private Integer commentCount;
@@ -103,5 +104,11 @@ public class Post {
 
     public void setUpdatedAt(Timestamp updatedAt) {
         this.updatedAt = updatedAt;
+    }
+    public  String getBarname() {
+        return barname;
+    }
+    public void setBarname(String barname) {
+        this.barname = barname;
     }
 }

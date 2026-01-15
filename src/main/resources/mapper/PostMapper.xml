@@ -38,7 +38,34 @@
     </update>
 
     <select id="selectAll" resultType="com.bar.beans.Post">
-        SELECT * FROM post ORDER BY pubtime DESC
+        SELECT p.*, b.name as barname
+        FROM post p
+        LEFT JOIN bar b ON p.bar_id = b.id
+        ORDER BY p.pubtime DESC
+    </select>
+
+    <!-- 新增：查询最新 ACTIVE 帖子并携带吧名称 -->
+    <select id="selectLatestActive" resultType="map">
+        SELECT p.id, p.title, p.comment_count, p.pubtime, b.name AS barName
+        FROM post p
+        LEFT JOIN bar b ON p.bar_id = b.id
+        WHERE p.status = 'ACTIVE'
+        ORDER BY p.pubtime DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 新增：根据关键词搜索帖子（标题/内容），携带吧名称 -->
+    <select id="searchActivePosts" resultType="map">
+        SELECT p.id, p.title, p.content, p.pubtime, p.comment_count, b.name AS barName
+        FROM post p
+        LEFT JOIN bar b ON p.bar_id = b.id
+        WHERE p.status = 'ACTIVE'
+          AND (
+              p.title LIKE CONCAT('%', #{keyword}, '%')
+              OR p.content LIKE CONCAT('%', #{keyword}, '%')
+          )
+        ORDER BY p.pubtime DESC
+        LIMIT #{limit}
     </select>
 
 </mapper>

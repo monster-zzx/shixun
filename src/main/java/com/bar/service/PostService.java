@@ -214,6 +214,22 @@ public class PostService {
         }
     }
 
+    public List<java.util.Map<String,Object>> getLatestActive(int limit){
+        try(SqlSession sqlSession= MybatisUtil.getSqlSession()){
+            PostMapper mapper=sqlSession.getMapper(PostMapper.class);
+            return mapper.selectLatestActive(limit);
+        }
+    }
+
+    public List<java.util.Map<String,Object>> searchActivePosts(String keyword, int limit){
+        if(keyword==null) keyword="";
+        keyword=keyword.trim();
+        try(SqlSession sqlSession= MybatisUtil.getSqlSession()){
+            PostMapper mapper=sqlSession.getMapper(PostMapper.class);
+            return mapper.searchActivePosts(keyword, limit);
+        }
+    }
+
     public List<Post> getAllPosts() {
         try (SqlSession sqlSession = MybatisUtil.getSqlSession()) {
             PostMapper mapper = sqlSession.getMapper(PostMapper.class);

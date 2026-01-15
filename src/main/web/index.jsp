@@ -333,9 +333,19 @@
                     </div>
                     <div class="card-body">
                         <div id="postListContainer">
-                            <div class="text-center py-5 text-muted">
-                                <i class="bi bi-file-text" style="font-size: 3rem;"></i>
-                                <p class="mt-2">帖子功能开发中，敬请期待...</p>
+                            <!-- 加载中 -->
+                            <div id="postLoading" class="text-center py-5">
+                                <div class="spinner-border text-success" role="status">
+                                    <span class="visually-hidden">加载中...</span>
+                                </div>
+                                <p class="mt-2 text-muted">正在加载帖子列表...</p>
+                            </div>
+                            <!-- 帖子列表内容 -->
+                            <ul id="postListContent" class="list-group list-group-flush" style="display:none;"></ul>
+                            <!-- 空数据提示 -->
+                            <div id="postEmpty" class="text-center py-5 text-muted" style="display:none;">
+                                <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                                <p class="mt-2">暂无帖子</p>
                             </div>
                         </div>
                     </div>
@@ -384,13 +394,14 @@
         }
     }
 
-    // 页面加载时自动加载贴吧列表
+    // 页面加载时自动加载贴吧列表和最新帖子
     document.addEventListener('DOMContentLoaded', function() {
         console.log('页面加载完成');
         console.log('sessionScope.userStatus:', '${sessionScope.userStatus}');
         console.log('sessionScope.user:', '${not empty sessionScope.user}');
         
         loadBars();
+        loadPosts();
 
         // 检查并限制被封禁用户
         restrictBannedUser();
@@ -558,6 +569,65 @@
                 content.style.display = 'block';
             }
         }
+
+    // 查看帖子详情
+    function viewPost(postId){
+        window.location.href = 'dispPost.jsp?postId=' + postId;
+    }
+
+    // 加载最新帖子列表
+    async function loadPosts(){
+        const loading=document.getElementById('postLoading');
+        const content=document.getElementById('postListContent');
+        const empty=document.getElementById('postEmpty');
+
+        loading.style.display='block';
+        content.style.display='none';
+        empty.style.display='none';
+
+        try{
+            const resp=await fetch('api/post',{
+                method:'GET',
+                headers:{'Content-Type':'application/json;charset=UTF-8'}
+            });
+            const text=await resp.text();
+            let data;
+            try{ data=JSON.parse(text);}catch(e){
+                console.error('JSON解析失败:',text);
+                loading.innerHTML='<p class="text-danger">加载失败，请刷新重试</p>';
+                return;
+            }
+            loading.style.display='none';
+            if(data && data.success && Array.isArray(data.data)){
+                // 取状态为ACTIVE且按时间排序，最多10条
+                const activePosts=data.data.filter(p=>p.status==='ACTIVE').sort((a,b)=>new Date(b.pubtime)-new Date(a.pubtime)).slice(0,10);
+                if(activePosts.length===0){
+                    empty.style.display='block';
+                }else{
+                    content.innerHTML=activePosts.map(p=>{
+                        const title=p.title||'无标题';
+                        const barName=p.barName || p.barname || ''
+                        const time=formatDate(p.pubtime);
+                        return '<li class="list-group-item d-flex justify-content-between align-items-start" onclick="viewPost(' + p.id + ')" style="cursor:pointer;">' +
+                                '<div class="ms-2 me-auto">' +
+                                    '<div class="fw-bold"><span class="text-success me-1">'+ (barName?('['+barName+']'):'') + '</span>' + title + '</div>' +
+                                    '<small class="text-muted">' + time + '</small>' +
+                                '</div>' +
+                                '<span class="badge bg-primary rounded-pill">' + (p.commentCount || 0) + '</span>' +
+                            '</li>';
+                    }).join('');
+                    content.style.display='block';
+                }
+            }else{
+                empty.style.display='block';
+            }
+        }catch(err){
+            loading.style.display='none';
+            console.error('加载帖子失败',err);
+            empty.innerHTML='<p class="text-danger">加载失败:'+err.message+'</p>';
+            empty.style.display='block';
+        }
+    }
 
     // 查看贴吧详情
     function viewBar(barId) {

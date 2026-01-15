@@ -140,8 +140,15 @@ public class PostServlet extends HttpServlet {
                 List<Post> posts = postService.getPostsByUserId(userId);
                 out.write(JsonResponse.success("查询成功", posts));
             } else {
-                List<Post> posts = postService.getAllPosts();
-                out.write(JsonResponse.success("查询成功", posts));
+                String limitParam=request.getParameter("limit");
+                if(limitParam!=null&&!limitParam.isEmpty()){
+                    int limit=Integer.parseInt(limitParam);
+                    java.util.List<java.util.Map<String,Object>> posts = postService.getLatestActive(limit);
+                    out.write(JsonResponse.success("查询成功",posts));
+                }else{
+                    List<Post> posts = postService.getAllPosts();
+                    out.write(JsonResponse.success("查询成功", posts));
+                }
             }
         } catch (NumberFormatException e) {
             out.write(JsonResponse.error("参数格式错误"));
