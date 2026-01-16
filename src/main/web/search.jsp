@@ -199,7 +199,7 @@
     }
 
     function viewPost(id) {
-        window.location.href = 'dispPost.jsp?id=' + id;
+        window.location.href = 'dispPost.jsp?postId=' + id;
     }
 
     document.addEventListener('DOMContentLoaded', function(){
